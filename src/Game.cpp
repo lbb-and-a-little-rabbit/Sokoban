@@ -1,13 +1,25 @@
 #include "Game.h"
 
-Game::Game(unsigned int w,unsigned int h,int cur_level) : Window_Width(w),Window_Height(h),window(sf::VideoMode({w,h}),"Sokoban"),current_level(cur_level) {
-    window.setFramerateLimit(60);
+Game::Game(unsigned int w,unsigned int h,int cur_level) : player(nullptr),Window_Width(w),Window_Height(h),window(sf::VideoMode({w,h}),"Sokoban"),current_level(cur_level),walkbuffer("assets/walk.ogg"),walksound(walkbuffer) {
+    //window.setFramerateLimit(60);
     current_board.current_map=maps_assistant.getMap(current_level); 
     current_board.Init_player_position();
     Set_based_on_board();
+
+    //set music
+    if (!music.openFromFile("assets/scattered_and_lost.mp3")) {
+        std::cerr << "Music Loading Failed!\n";
+        exit(-1);
+    }
+    music.setLooping(true);
+    if (!level_complete.openFromFile("assets/level_win.mp3")) {
+        std::cerr << "Music Loading Failed!\n";
+        exit(-1);
+    }
 }
 
 void Game::run(){
+    music.play();
     while(window.isOpen()){
         processEvents();    
         update();
@@ -36,10 +48,36 @@ void Game::processEvents(){
                 case sf::Keyboard::Key::H: {
                     validMove=false;
                     gethint=true;
+                    break;
                 }
                 case sf::Keyboard::Key::P:{
                     validMove=false;
                     auto_solve=true;
+                    break;
+                }
+                case sf::Keyboard::Key::R:{
+                    validMove=false;
+                    islevelCompleted=false;
+                    current_board.current_map=maps_assistant.getMap(current_level);
+                    current_board.Init_player_position();
+                    Set_based_on_board();
+                    break;
+                }
+                case sf::Keyboard::Key::Space:{
+                    validMove=false;
+                    if(islevelCompleted){
+                        islevelCompleted=false;
+                        current_level++;
+                        if(current_level>=maps_assistant.getLevelCount()){
+                            std::cout << "Congratulations!\nYou have completed all levels!\n";
+                        }
+                        else{
+                            current_board.current_map=maps_assistant.getMap(current_level);
+                            current_board.Init_player_position();
+                            Set_based_on_board();
+                        }
+                    }
+                    break;
                 }
                 default:
                     validMove=false;
@@ -50,6 +88,7 @@ void Game::processEvents(){
 
                 if(std::find(possibleMoves.begin(), possibleMoves.end(), move) != possibleMoves.end()){
                     current_board = current_board.applyMove(move);
+                    walksound.play();
                     Set_based_on_board();
                 }
             }
@@ -63,7 +102,6 @@ void Game::processEvents(){
                 else{
                     std::cout << "This problem is not solvable right now!\n";
                 }
-                break;
             }
 
             if(auto_solve){
@@ -79,7 +117,6 @@ void Game::processEvents(){
                 else{
                     std::cout << "This problem is not solvable right now!\n";
                 }
-                break;
             }
         }
 
@@ -95,10 +132,16 @@ void Game::update(){
 
         if(autoSolveClock.getElapsedTime().asSeconds() >= autoSolveInterval){
             current_board = current_board.applyMove(solutionMoves[solutionIndex]);
+            walksound.play();
             solutionIndex++;
             Set_based_on_board();
             autoSolveClock.restart();
         }
+    }
+
+    if(current_board.isTerminal()&&!islevelCompleted){
+        islevelCompleted=true;
+        level_complete.play();
     }
 }
 

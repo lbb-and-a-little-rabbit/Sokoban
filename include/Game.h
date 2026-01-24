@@ -22,6 +22,7 @@ class Game{
     Map maps_assistant;
     int current_level;
     Board current_board;
+    bool islevelCompleted=false;
 
     std::vector<Wall> walls;
     std::vector<Target> targets;
@@ -33,7 +34,13 @@ class Game{
     std::vector<Move> solutionMoves;
     size_t solutionIndex = 0;
     sf::Clock autoSolveClock;
-    float autoSolveInterval = 1.0f; // 1 秒一步
+    float autoSolveInterval = 0.3f;
+
+    //music
+    sf::Music music;
+    sf::SoundBuffer walkbuffer;
+    sf::Sound walksound;
+    sf::Music level_complete;
 
     void Clear();
     void Set_based_on_board();
