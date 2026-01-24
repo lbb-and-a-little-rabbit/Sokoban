@@ -1,0 +1,55 @@
+cmake_minimum_required(VERSION 3.26)
+
+project(Sokoban
+    VERSION 1.0
+    LANGUAGES CXX
+)
+
+# 使用 C++20（SFML 3 推荐）
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# ===== SFML 3 配置 =====
+set(SFML_DIR
+    "D:/SFML-3.0.2-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.2/lib/cmake/SFML" #sfml路径
+)
+
+find_package(SFML 3 REQUIRED COMPONENTS
+    Graphics
+    Window
+    System
+    Audio
+)
+
+# ===== 源文件 =====
+file(GLOB_RECURSE SOKOBAN_SOURCES
+    src/*.cpp
+)
+
+# ===== 可执行文件 =====
+add_executable(Sokoban
+    ${SOKOBAN_SOURCES}
+)
+
+# ===== 头文件搜索路径 =====
+target_include_directories(Sokoban
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/include
+)
+
+# ===== 链接 SFML =====
+target_link_libraries(Sokoban
+    PRIVATE
+        SFML::Graphics
+        SFML::Window
+        SFML::System
+        SFML::Audio
+)
+
+# ===== 复制 assets 到构建目录（可选但强烈推荐）=====
+add_custom_target(copy_assets ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${PROJECT_SOURCE_DIR}/assets
+        $<TARGET_FILE_DIR:Sokoban>/assets
+)
