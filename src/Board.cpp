@@ -1,5 +1,28 @@
 #include "Board.h"
 
+Board::Board(){
+    player_position={-1,-1};
+}
+
+void Board::Init_player_position(){
+    if(!current_map.size()){
+        std::cerr << "Failed to initialize player position!\n";
+        exit(-1);
+    }
+
+    bool find=false;
+    for(int i=0;i<current_map.size();i++){
+        if(find) break;
+        for(int j=0;j<current_map[0].size();j++){
+            if(current_map[i][j]=='p'||current_map[i][j]=='P'){
+                player_position={i,j};
+                find=true;
+                break;
+            }
+        }
+    }
+}
+
 std::vector<Move> Board::generateMoves(){
     int m=current_map.size();
     int n=current_map[0].size();

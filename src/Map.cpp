@@ -1,7 +1,7 @@
 #include "Map.h"
 
 std::vector<std::vector<std::string>> Map::maps={
-    //level 1
+    //level 0
     {
         "#####",
         "#   #",
@@ -9,7 +9,7 @@ std::vector<std::vector<std::string>> Map::maps={
         "#  x#",
         "#####"
     },
-    //level 2
+    //level 1
     {
         "######",
         "#    #",
@@ -18,7 +18,7 @@ std::vector<std::vector<std::string>> Map::maps={
         "#    #",
         "######"
     },
-    //level 3
+    //level 2
     {
         "#######",
         "#  x x#",
@@ -28,6 +28,8 @@ std::vector<std::vector<std::string>> Map::maps={
         "#######"
     }
 };
+
+Map::Map() {}
 
 int Map::getLevelCount(){
     return maps.size();
