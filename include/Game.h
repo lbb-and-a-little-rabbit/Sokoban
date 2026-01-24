@@ -42,6 +42,11 @@ class Game{
     sf::Sound walksound;
     sf::Music level_complete;
 
+    //Text
+    sf::Font uiFont;
+    std::vector<sf::Text> helpTexts;
+    bool showHelp = true;
+
     void Clear();
     void Set_based_on_board();
 

@@ -16,6 +16,41 @@ Game::Game(unsigned int w,unsigned int h,int cur_level) : player(nullptr),Window
         std::cerr << "Music Loading Failed!\n";
         exit(-1);
     }
+
+    //set Text
+    if (!uiFont.openFromFile("assets/uifont.ttf")) {
+        std::cerr << "Font load failed\n";
+        exit(-1);
+    }
+
+    // 标题
+    sf::Text title(uiFont);
+    title.setString("Control");
+    title.setCharacterSize(26);
+    title.setFillColor(sf::Color::White);
+    title.setPosition({20.f, 20.f});
+    helpTexts.push_back(title);
+
+    // 内容
+    std::vector<std::string> lines = {
+        "W / A / S / D    Move",
+        "R               Restart",
+        "Space           Next Level",
+        "H               Hint",
+        "P               AI Solver"
+    };
+
+    float y = 60.f;
+    for (auto& line : lines) {
+        sf::Text t(uiFont);
+        t.setString(line);
+        t.setCharacterSize(18);
+        t.setFillColor(sf::Color(200, 200, 200));
+        t.setPosition({20.f, y});
+        y += 26.f;
+        helpTexts.push_back(t);
+    }
+
 }
 
 void Game::run(){
@@ -77,6 +112,11 @@ void Game::processEvents(){
                             Set_based_on_board();
                         }
                     }
+                    break;
+                }
+                case sf::Keyboard::Key::Tab:{
+                    showHelp=!showHelp;
+                    validMove=false;
                     break;
                 }
                 default:
@@ -152,6 +192,10 @@ void Game::render(){
     for(auto &t:targets) window.draw(t.targetSprite);
     for(auto &b:boxes) window.draw(b.boxSprite);
     if(player) window.draw(player->playerSprite);
+    if (showHelp){
+        for(auto& t:helpTexts) window.draw(t);
+    }
+
 
     window.display();
 }
