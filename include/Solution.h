@@ -18,6 +18,7 @@ class Solution{
     Board current_board;
 
     Result UCS();
+    Result Astar();
 
 public:
     Solution(int idx,Map &m);

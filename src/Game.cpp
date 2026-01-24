@@ -56,18 +56,19 @@ void Game::processEvents(){
 
             if(gethint){
                 Solution sol(current_board);
-                Result res=sol.solve(1);
+                Result res=sol.solve(2);
                 if(res.solvable){
                     std::cout << "This problem is now solvable!\nThe optimal solutions is " << res.best_steps << " step(s).\n";
                 }
                 else{
                     std::cout << "This problem is not solvable right now!\n";
                 }
+                break;
             }
 
             if(auto_solve){
                 Solution sol(current_board);
-                Result res = sol.solve(1);
+                Result res = sol.solve(2);
 
                 if(res.solvable){
                     solutionMoves = res.path;
@@ -78,6 +79,7 @@ void Game::processEvents(){
                 else{
                     std::cout << "This problem is not solvable right now!\n";
                 }
+                break;
             }
         }
 

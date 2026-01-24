@@ -18,6 +18,8 @@ class Board{
     void Init_player_position();
     std::string MaptoString();
 
+    bool isDeadCorner(int x,int y);
+
     friend class Solution;
     friend class Game;
 

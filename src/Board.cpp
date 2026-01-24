@@ -29,6 +29,44 @@ std::string Board::MaptoString(){
     return s;
 }
 
+bool Board::isDeadCorner(int x, int y) {
+    char c = current_map[y][x];
+
+    // 如果是目标，不算死角
+    if(c == 'B' || c == 'x') return false;
+
+    int m = current_map.size();
+    int n = current_map[0].size();
+
+    auto wall = [&](int yy, int xx){
+        if(yy<0 || yy>=m || xx<0 || xx>=n) return true;
+        char ch = current_map[yy][xx];
+        return ch=='#';
+    };
+
+    // 1. 四角死角
+    if((wall(y-1,x) && wall(y,x-1)) ||
+       (wall(y-1,x) && wall(y,x+1)) ||
+       (wall(y+1,x) && wall(y,x-1)) ||
+       (wall(y+1,x) && wall(y,x+1))) return true;
+
+    // 2. 墙边死角（水平或垂直夹墙）
+    // 垂直夹墙
+    if((wall(y-1,x) && wall(y+1,x)) && 
+       (x>0 && current_map[y][x-1] != 'x') && 
+       (x<n-1 && current_map[y][x+1] != 'x')) return true;
+
+    // 水平夹墙
+    if((wall(y,x-1) && wall(y,x+1)) && 
+       (y>0 && current_map[y-1][x] != 'x') && 
+       (y<m-1 && current_map[y+1][x] != 'x')) return true;
+
+    // 3. 可选：箱子排列死局（相邻箱子无法推动）  
+    // 例如两个箱子沿墙角排成 L 型且不是目标，可以加一个规则  
+
+    return false;
+}
+
 std::vector<Move> Board::generateMoves(){
     int m=current_map.size();
     int n=current_map[0].size();
