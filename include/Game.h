@@ -4,8 +4,6 @@
 #include <SFML/Audio.hpp>
 #include <SFML/System.hpp>
 
-#include <algorithm>
-
 #include "Map.h"
 #include "Board.h"
 
@@ -29,6 +27,13 @@ class Game{
     std::vector<Target> targets;
     std::vector<Box> boxes;
     Player* player;
+
+    // 自动求解相关
+    bool autoSolving = false;
+    std::vector<Move> solutionMoves;
+    size_t solutionIndex = 0;
+    sf::Clock autoSolveClock;
+    float autoSolveInterval = 1.0f; // 1 秒一步
 
     void Clear();
     void Set_based_on_board();

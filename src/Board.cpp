@@ -23,6 +23,12 @@ void Board::Init_player_position(){
     }
 }
 
+std::string Board::MaptoString(){
+    std::string s;
+    for(const auto& row:current_map) s+=row;
+    return s;
+}
+
 std::vector<Move> Board::generateMoves(){
     int m=current_map.size();
     int n=current_map[0].size();
@@ -72,6 +78,14 @@ Board Board::applyMove(Move move){
     return res;
 }
 
-
-
-
+bool Board::isTerminal(){
+    int m=current_map.size();
+    int n=current_map[0].size();
+    for(int i=0;i<m;i++){
+        for(int j=0;j<n;j++){
+            if(current_map[i][j]=='x') return false;
+            if(current_map[i][j]=='P') return false;
+        }
+    }
+    return true;
+}

@@ -24,15 +24,25 @@ void Game::processEvents(){
         // 按键处理
         if(event->is<sf::Event::KeyPressed>()){
             Move move;
-            bool validMove = true;
+            bool validMove=true;
+            bool gethint=false;
+            bool auto_solve=false;
 
             switch(event->getIf<sf::Event::KeyPressed>()->code){
                 case sf::Keyboard::Key::W: move = Move::Up; break;
                 case sf::Keyboard::Key::S: move = Move::Down; break;
                 case sf::Keyboard::Key::A: move = Move::Left; break;
                 case sf::Keyboard::Key::D: move = Move::Right; break;
+                case sf::Keyboard::Key::H: {
+                    validMove=false;
+                    gethint=true;
+                }
+                case sf::Keyboard::Key::P:{
+                    validMove=false;
+                    auto_solve=true;
+                }
                 default:
-                    validMove = false;
+                    validMove=false;
             }
 
             if(validMove){
@@ -43,13 +53,51 @@ void Game::processEvents(){
                     Set_based_on_board();
                 }
             }
+
+            if(gethint){
+                Solution sol(current_board);
+                Result res=sol.solve(1);
+                if(res.solvable){
+                    std::cout << "This problem is now solvable!\nThe optimal solutions is " << res.best_steps << " step(s).\n";
+                }
+                else{
+                    std::cout << "This problem is not solvable right now!\n";
+                }
+            }
+
+            if(auto_solve){
+                Solution sol(current_board);
+                Result res = sol.solve(1);
+
+                if(res.solvable){
+                    solutionMoves = res.path;
+                    solutionIndex = 0;
+                    autoSolving = true;
+                    autoSolveClock.restart();
+                }
+                else{
+                    std::cout << "This problem is not solvable right now!\n";
+                }
+            }
         }
 
     }
 }
 
 void Game::update(){
-    
+    if(autoSolving){
+        if(solutionIndex >= solutionMoves.size()){
+            autoSolving = false;
+            return;
+        }
+
+        if(autoSolveClock.getElapsedTime().asSeconds() >= autoSolveInterval){
+            current_board = current_board.applyMove(solutionMoves[solutionIndex]);
+            solutionIndex++;
+            Set_based_on_board();
+            autoSolveClock.restart();
+        }
+    }
 }
 
 void Game::render(){

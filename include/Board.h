@@ -16,6 +16,7 @@ class Board{
     std::pair<int,int> player_position;
 
     void Init_player_position();
+    std::string MaptoString();
 
     friend class Solution;
     friend class Game;
@@ -25,5 +26,6 @@ public:
 
     std::vector<Move> generateMoves();
     Board applyMove(Move move);
+    bool isTerminal();
 };
 
