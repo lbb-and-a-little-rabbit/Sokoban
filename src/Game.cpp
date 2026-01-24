@@ -20,7 +20,31 @@ void Game::processEvents(){
         if(event->is<sf::Event::Closed>()){
             window.close();
         }
-      
+
+        // 按键处理
+        if(event->is<sf::Event::KeyPressed>()){
+            Move move;
+            bool validMove = true;
+
+            switch(event->getIf<sf::Event::KeyPressed>()->code){
+                case sf::Keyboard::Key::W: move = Move::Up; break;
+                case sf::Keyboard::Key::S: move = Move::Down; break;
+                case sf::Keyboard::Key::A: move = Move::Left; break;
+                case sf::Keyboard::Key::D: move = Move::Right; break;
+                default:
+                    validMove = false;
+            }
+
+            if(validMove){
+                auto possibleMoves = current_board.generateMoves();
+
+                if(std::find(possibleMoves.begin(), possibleMoves.end(), move) != possibleMoves.end()){
+                    current_board = current_board.applyMove(move);
+                    Set_based_on_board();
+                }
+            }
+        }
+
     }
 }
 

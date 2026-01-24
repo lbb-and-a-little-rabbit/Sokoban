@@ -4,6 +4,8 @@
 #include <SFML/Audio.hpp>
 #include <SFML/System.hpp>
 
+#include <algorithm>
+
 #include "Map.h"
 #include "Board.h"
 
