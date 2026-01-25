@@ -17,7 +17,7 @@
 class Game{
     unsigned int Window_Width;
     unsigned int Window_Height;
-    sf::RenderWindow window;
+    sf::RenderWindow &window;
 
     Map maps_assistant;
     int current_level;
@@ -56,7 +56,8 @@ class Game{
     void render();
 
 public:
-    Game(unsigned int w=800,unsigned int h=600,int cur_level=0);
+    //Game(unsigned int w=800,unsigned int h=600,int cur_level=0);
+    Game(sf::RenderWindow &window,unsigned int w=800,unsigned int h=600,int cur_level=0);
 
     void run();
 };

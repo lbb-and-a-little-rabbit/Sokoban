@@ -1,6 +1,6 @@
 #include "Game.h"
 
-Game::Game(unsigned int w,unsigned int h,int cur_level) : player(nullptr),Window_Width(w),Window_Height(h),window(sf::VideoMode({w,h}),"Sokoban"),current_level(cur_level),walkbuffer("assets/walk.ogg"),walksound(walkbuffer) {
+Game::Game(sf::RenderWindow &window,unsigned int w,unsigned int h,int cur_level) : window(window),player(nullptr),Window_Width(w),Window_Height(h),current_level(cur_level),walkbuffer("assets/walk.ogg"),walksound(walkbuffer) {
     //window.setFramerateLimit(60);
     current_board.current_map=maps_assistant.getMap(current_level); 
     current_board.Init_player_position();
