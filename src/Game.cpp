@@ -38,7 +38,8 @@ Game::Game(sf::RenderWindow &window,unsigned int w,unsigned int h,int cur_level)
         "Space           Next Level",
         "H               Hint",
         "P               AI Solver",
-        "Tab             Show/Close"
+        "Tab             Show/Close",
+        "Esc             Back To Menu"
     };
 
     float y = 60.f;
@@ -168,6 +169,7 @@ void Game::processEvents(){
                 std::cout << "AI is trying.Please wait...\n";
                 Result res = sol.solve(2);
                 if(res.timeout){
+                    isautoSolving=false;
                     std::cout << "AI can't solve this difficult problem(눈_눈)\nPlease try by yourself!\n";
                 }
                 else if(res.solvable){
