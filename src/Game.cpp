@@ -60,6 +60,11 @@ void Game::run(){
         processEvents();    
         update();
         render();
+    
+        if(backtomenu){
+            music.stop();
+            break;
+        }
     }
 }
 
@@ -121,6 +126,10 @@ void Game::processEvents(){
                 case sf::Keyboard::Key::Tab:{
                     showHelp=!showHelp;
                     validMove=false;
+                    break;
+                }
+                case sf::Keyboard::Key::Escape:{
+                    backtomenu=true;
                     break;
                 }
                 default:
@@ -197,6 +206,11 @@ void Game::update(){
     if(current_board.isTerminal()&&!islevelCompleted){
         islevelCompleted=true;
         level_complete.play();
+
+        SaveData data = SaveSystem::load();
+        data.maxUnlockedLevel =
+            std::max(data.maxUnlockedLevel, current_level + 1);
+        SaveSystem::save(data);
     }
 }
 

@@ -7,6 +7,7 @@
 #include "Map.h"
 #include "Board.h"
 
+#include "SaveSystem.h"
 #include "Solution.h"
 
 #include "Wall.h"
@@ -48,6 +49,9 @@ class Game{
     std::vector<sf::Text> helpTexts;
     bool showHelp = true;
 
+    //Esc
+    bool backtomenu=false;
+
     void Clear();
     void Set_based_on_board();
 
@@ -56,7 +60,6 @@ class Game{
     void render();
 
 public:
-    //Game(unsigned int w=800,unsigned int h=600,int cur_level=0);
     Game(sf::RenderWindow &window,unsigned int w=800,unsigned int h=600,int cur_level=0);
 
     void run();

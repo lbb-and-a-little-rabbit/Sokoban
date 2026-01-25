@@ -6,7 +6,7 @@ sf::Texture Menu::backgroundTexture("assets/menu_background.png");
 
 // ===== 构造函数 =====
 Menu::Menu(sf::RenderWindow &window)
-: window(window),backgroundSprite(backgroundTexture),font("assets/uifont.ttf"),startText(font),exitText(font)
+: window(window),backgroundSprite(backgroundTexture),font("assets/uifont.ttf"),startText(font),levelText(font),exitText(font)
 {
     // 缩放铺满窗口
     sf::Vector2u textureSize = backgroundTexture.getSize();
@@ -18,22 +18,32 @@ Menu::Menu(sf::RenderWindow &window)
     backgroundSprite.setScale(scale);
 
     // Start Game 文本
-    startText.setString("Start Game");
+    startText.setString("New Game");
     startText.setCharacterSize(48);
     startText.setFillColor(sf::Color::White);
     startText.setPosition({300.f, 250.f});
+
+    // Level 文本
+    levelText.setString("Select Level");
+    levelText.setCharacterSize(48);
+    levelText.setFillColor(sf::Color::White);
+    levelText.setPosition({300.f, 330.f});
 
     // Exit 文本
     exitText.setString("Exit");
     exitText.setCharacterSize(48);
     exitText.setFillColor(sf::Color::White);
-    exitText.setPosition({300.f, 330.f});
+    exitText.setPosition({300.f, 410.f});
 
     // 菜单音乐
     if (currentMusic.openFromFile("assets/temple.wav")) {
         currentMusic.setLooping(true);
         currentMusic.play();
     }
+
+    // 存档信息
+    SaveData save = SaveSystem::load();
+    maxLevel = save.maxUnlockedLevel;
 }
 
 // ===== 菜单主循环 =====
@@ -65,11 +75,16 @@ void Menu::processEvents(MenuResult& result) {
                 // 转换为世界坐标
                 sf::Vector2f mousePos = window.mapPixelToCoords(mouse->position);
 
-                // 检查是否点击了 Start 或 Exit 文本
+                // 检查是否点击了 Start Level Exit 文本
                 if (startText.getGlobalBounds().contains(mousePos)) {
                     result = MenuResult::StartGame;
                     currentMusic.stop();
                     return; // 点击后立即返回
+                }
+
+                if (levelText.getGlobalBounds().contains(mousePos)) {
+                    result = MenuResult::SelectLevel;
+                    return;
                 }
 
                 if (exitText.getGlobalBounds().contains(mousePos)) {
@@ -92,6 +107,12 @@ void Menu::updateHover() {
         startText.setFillColor(sf::Color::White);
     }
 
+    if (levelText.getGlobalBounds().contains(mouse)) {
+        levelText.setFillColor(sf::Color::Magenta);
+    } else {
+        levelText.setFillColor(sf::Color::White);
+    }
+
     if (exitText.getGlobalBounds().contains(mouse)) {
         exitText.setFillColor(sf::Color::Red);
     } else {
@@ -104,6 +125,7 @@ void Menu::render() {
     window.clear();
     window.draw(backgroundSprite);
     window.draw(startText);
+    window.draw(levelText);
     window.draw(exitText);
     window.display();
 }
