@@ -37,7 +37,8 @@ Game::Game(unsigned int w,unsigned int h,int cur_level) : player(nullptr),Window
         "R               Restart",
         "Space           Next Level",
         "H               Hint",
-        "P               AI Solver"
+        "P               AI Solver",
+        "Tab             Show/Close"
     };
 
     float y = 60.f;
@@ -86,11 +87,14 @@ void Game::processEvents(){
                     break;
                 }
                 case sf::Keyboard::Key::P:{
+                    isautoSolving=true;
                     validMove=false;
                     auto_solve=true;
                     break;
                 }
                 case sf::Keyboard::Key::R:{
+                    isautoSolving=false;
+                    autoSolving=false;
                     validMove=false;
                     islevelCompleted=false;
                     current_board.current_map=maps_assistant.getMap(current_level);
@@ -123,6 +127,8 @@ void Game::processEvents(){
                     validMove=false;
             }
 
+            if(isautoSolving) validMove=false;
+
             if(validMove){
                 auto possibleMoves = current_board.generateMoves();
 
@@ -135,8 +141,12 @@ void Game::processEvents(){
 
             if(gethint){
                 Solution sol(current_board);
+                std::cout << "AI is trying.Please wait...\n";
                 Result res=sol.solve(2);
-                if(res.solvable){
+                if(res.timeout){
+                    std::cout << "AI can't solve this difficult problem(눈_눈)\nPlease try by yourself!\n";
+                }
+                else if(res.solvable){
                     std::cout << "This problem is now solvable!\nThe optimal solutions is " << res.best_steps << " step(s).\n";
                 }
                 else{
@@ -146,15 +156,19 @@ void Game::processEvents(){
 
             if(auto_solve){
                 Solution sol(current_board);
+                std::cout << "AI is trying.Please wait...\n";
                 Result res = sol.solve(2);
-
-                if(res.solvable){
+                if(res.timeout){
+                    std::cout << "AI can't solve this difficult problem(눈_눈)\nPlease try by yourself!\n";
+                }
+                else if(res.solvable){
                     solutionMoves = res.path;
                     solutionIndex = 0;
                     autoSolving = true;
                     autoSolveClock.restart();
                 }
                 else{
+                    isautoSolving=false;
                     std::cout << "This problem is not solvable right now!\n";
                 }
             }
@@ -167,6 +181,7 @@ void Game::update(){
     if(autoSolving){
         if(solutionIndex >= solutionMoves.size()){
             autoSolving = false;
+            isautoSolving=false;
             return;
         }
 

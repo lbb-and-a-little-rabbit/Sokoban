@@ -1,17 +1,21 @@
 #pragma once
 
+#include <chrono>
 #include <algorithm>
 #include <unordered_map>
 #include <queue>
 
 #include "Board.h"
 
+constexpr double TIME_LIMIT = 5.0;
+
 struct Result{
+    bool timeout;
     bool solvable;
     int best_steps;
     std::vector<Move> path;
 
-    Result() : solvable(false),best_steps(-1) {};
+    Result() : timeout(false),solvable(false),best_steps(-1) {};
 };
 
 class Solution{

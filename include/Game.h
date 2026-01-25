@@ -30,6 +30,7 @@ class Game{
     Player* player;
 
     // 自动求解相关
+    bool isautoSolving = false;
     bool autoSolving = false;
     std::vector<Move> solutionMoves;
     size_t solutionIndex = 0;

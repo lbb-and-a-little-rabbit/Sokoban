@@ -27,6 +27,9 @@ Result Solution::solve(int choice){
 
 Result Solution::UCS(){
     Result res;
+
+    auto start = std::chrono::steady_clock::now();
+
     std::unordered_map<std::string,std::string> parent;
     std::unordered_map<std::string,Move> parentMove;
     std::unordered_map<std::string,int> dist;
@@ -37,6 +40,18 @@ Result Solution::UCS(){
     dist[current_board.MaptoString()]=0;
     pq.push({0,current_board});
     while(!pq.empty()){
+
+        // ===== 超时检测 =====
+        auto now = std::chrono::steady_clock::now();
+        double elapsed =
+            std::chrono::duration<double>(now - start).count();
+        if(elapsed >= TIME_LIMIT){
+            res.timeout = true;
+            res.solvable = false;
+            return res;
+        }
+        // ====================
+
         auto [w,board]=pq.top();
         pq.pop();
 
@@ -150,6 +165,9 @@ int heuristic_min_matching(const std::vector<std::pair<int,int>> &boxes,
 
 Result Solution::Astar(){
     Result res;
+
+    auto start = std::chrono::steady_clock::now();
+
     std::unordered_map<std::string,std::string> parent;
     std::unordered_map<std::string,Move> parentMove;
     std::unordered_map<std::string,int> dist;
@@ -171,15 +189,7 @@ Result Solution::Astar(){
                 }
             }
         }
-        /*
-        for(auto [x,y]:boxPoses){
-            int mindist=INT_MAX;
-            for(auto [tx,ty]:targetPoses){
-                mindist=std::min(mindist,abs(x-tx)+abs(y-ty));
-            }
-            h+=mindist;
-        }
-        */
+
         h = heuristic_min_matching(boxPoses, targetPoses);
 
         // 玩家距离加成
@@ -205,6 +215,21 @@ Result Solution::Astar(){
     dist[current_board.MaptoString()]=0;
     pq.push({heuristic(current_board),current_board});
     while(!pq.empty()){
+
+        // ===== 超时检测 =====
+        auto now = std::chrono::steady_clock::now();
+        double elapsed =
+            std::chrono::duration<double>(now - start).count();
+        
+        //std::cout << "Time used " << elapsed << "s\n";
+        
+        if(elapsed >= TIME_LIMIT){
+            res.timeout = true;
+            res.solvable = false;
+            return res;
+        }
+        // ====================
+
         auto [f,board]=pq.top();
         pq.pop();
 
