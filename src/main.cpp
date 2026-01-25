@@ -4,6 +4,16 @@
 
 int main(){
     sf::RenderWindow window(sf::VideoMode({800,600}),"SoKoban");
+
+    // 加载图标
+    sf::Image icon;
+    if (!icon.loadFromFile("assets/target_box.png")) {
+        // 加载失败可用默认
+        std::cout << "Failed to load icon.png!" << std::endl;
+    } else {
+        window.setIcon(icon);
+    }
+
 menu_label:
     Menu menu(window);
     MenuResult result=menu.run();
