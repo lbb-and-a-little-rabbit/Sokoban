@@ -15,6 +15,8 @@
 #include "Target.h"
 #include "Player.h"
 
+#include "Trainer.h"
+
 class Game{
     unsigned int Window_Width;
     unsigned int Window_Height;

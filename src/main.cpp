@@ -2,8 +2,47 @@
 #include "Menu.h"
 #include "LevelSelect.h"
 
-int main(){
+int main(int argc, char** argv){
     sf::RenderWindow window(sf::VideoMode({800,600}),"SoKoban");
+
+    if(argc > 1 && std::string(argv[1]) == "--train"){
+        TrainingStatus status;
+        Trainer t;
+        t.totalEpisodes = 5000;
+        t.trainAsync(&status);
+
+        // 窗口显示训练信息
+        sf::Font font;
+        bool isfontload=font.openFromFile("assets/uifont.ttf"); // 确保有字体文件
+        sf::Text text(font);
+        text.setCharacterSize(24);
+        text.setFillColor(sf::Color::White);
+        text.setPosition({50,50});
+
+        while(window.isOpen()){
+            while(const std::optional event=window.pollEvent()){
+                if(event->is<sf::Event::Closed>()){
+                    window.close();
+                }
+            }
+
+            window.clear();
+
+            // 更新训练信息
+            std::string info = "Episode: " + std::to_string(status.currentEpisode.load()) +
+                               "/" + std::to_string(t.totalEpisodes) +
+                               "\nSolved: " + std::to_string(status.solved.load()) +
+                               "\nAvgReward: " + std::to_string(status.avgReward.load());
+            text.setString(info);
+
+            window.draw(text);
+            window.display();
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(16));
+        }
+
+        return 0;
+    }
 
     // 加载图标
     sf::Image icon;

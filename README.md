@@ -9,6 +9,9 @@
 - 存档系统
 - AI 自动解答（受算力限制，5 秒内无法求解则停止）
 - 最优步数提示
+- 配备了简单的机器学习AI,简单训练集可达60%正确率;复杂训练集正确率在10%左右，有待提高。
+
+<img src="assets/TrainResult.png"/>
 
 ---
 
@@ -37,10 +40,19 @@
 - SFML3.x（用于渲染）
 
 ### 使用方法
+正常游戏
 ```bash
 cmake -S . -B build -G "MinGW Makefiles"
 cmake --build build
 ./build\Sokoban
+```
+
+
+AI训练
+```bash
+cmake -S . -B build -G "MinGW Makefiles"
+cmake --build build
+./build\Sokoban --train
 ```
 
 ## ❤️ 鸣谢

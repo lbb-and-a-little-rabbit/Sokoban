@@ -127,3 +127,130 @@ bool Board::isTerminal(){
     }
     return true;
 }
+
+int Board::sumBoxToTargetDist(){
+    auto manhattandist=[](const std::pair<int,int> &a, const std::pair<int,int> &b) -> int {
+        return abs(a.first - b.first) + abs(a.second - b.second);
+    };
+    std::vector<std::pair<int,int>> boxes,targets;
+    int m=current_map.size();
+    int n=current_map[0].size();
+    for(int i=0;i<m;i++){
+        for(int j=0;j<n;j++){
+            if(current_map[i][j]=='b') boxes.push_back({i,j});
+            if(current_map[i][j]=='x'||current_map[i][j]=='P') targets.push_back({i,j});
+        }
+    }
+    int dist=0;
+    for(auto &b:boxes){
+        int best=INT_MAX;
+        for(auto &t:targets){
+            best=std::min(best,manhattandist(b,t));
+        }
+    }
+    return dist;
+}
+
+bool Board::boxOnTargetIncreased(Board &b){
+    int cnt1=0,cnt2=0;
+    std::string s1=MaptoString(),s2=b.MaptoString();
+    for(int i=0;i<s1.size();i++){
+        if(s1[i]=='B') cnt1++;
+        if(s2[i]=='B') cnt2++;
+    }
+    return cnt1>cnt2;
+}
+
+//Dead判断
+
+inline bool isWall(char c){
+    return c=='#';
+}
+
+inline bool isBox(char c){
+    return c=='b' || c=='B';
+}
+
+inline bool isTarget(char c){
+    return c=='x' || c=='B' || c=='P';
+}
+
+bool Board::check2x2Dead(int y, int x){
+    static int dx[4]={0,1,0,1};
+    static int dy[4]={0,0,1,1};
+
+    int m=current_map.size();
+    int n=current_map[0].size();
+
+    for(int k=0;k<4;k++){
+        int sy=y-dy[k];
+        int sx=x-dx[k];
+        if(sy<0||sx<0||sy+1>=m||sx+1>=n) continue;
+
+        bool allBlock=true;
+        bool hasNonTargetBox=false;
+
+        for(int i=0;i<2;i++){
+            for(int j=0;j<2;j++){
+                char c=current_map[sy+i][sx+j];
+                if(!(isWall(c)||isBox(c))){
+                    allBlock=false;
+                }
+                if(c=='b') hasNonTargetBox=true;
+            }
+        }
+
+        if(allBlock && hasNonTargetBox) return true;
+    }
+    return false;
+}
+
+bool Board::frozenOnWall(int y,int x){
+    int m=current_map.size();
+    int n=current_map[0].size();
+
+    // 贴左 / 右墙
+    if(isWall(current_map[y][x-1]) || isWall(current_map[y][x+1])){
+        bool hasTarget=false;
+        for(int j=0;j<n;j++){
+            if(current_map[y][j]=='x'||current_map[y][j]=='B') {
+                hasTarget=true; break;
+            }
+        }
+        if(!hasTarget) return true;
+    }
+
+    // 贴上 / 下墙
+    if(isWall(current_map[y-1][x]) || isWall(current_map[y+1][x])){
+        bool hasTarget=false;
+        for(int i=0;i<m;i++){
+            if(current_map[i][x]=='x'||current_map[i][x]=='B'){
+                hasTarget=true; break;
+            }
+        }
+        if(!hasTarget) return true;
+    }
+    return false;
+}
+
+
+bool Board::isDead(){
+    int m=current_map.size();
+    int n=current_map[0].size();
+
+    for(int i=0;i<m;i++){
+        for(int j=0;j<n;j++){
+            if(current_map[i][j]=='b'){   // 非目标箱子
+                // 角落死锁
+                if(isDeadCorner(j,i)) return true;
+
+                // 2x2 block
+                if(check2x2Dead(i,j)) return true;
+
+                // 贴墙冻结
+                if(frozenOnWall(i,j)) return true;
+            }
+        }
+    }
+    return false;
+}
