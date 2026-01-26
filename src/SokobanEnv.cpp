@@ -19,7 +19,7 @@ StepResult SokobanEnv::step(Move m){
 
     //原地踏步
     if(next.MaptoString() == cur.MaptoString()){
-        reward -= 5;
+        return {cur, -10, false};
     }
 
     //箱子→目标 曼哈顿距离变化

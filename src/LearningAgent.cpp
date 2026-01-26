@@ -17,6 +17,7 @@ Move LearningAgent::act(Board& state){
 
     // 利用
     auto moves = state.generateMoves();
+    if(moves.empty()) return Move::None;
     Move best = moves[0];
     double bestQ = -1e9;
 
@@ -36,6 +37,8 @@ void LearningAgent::observe(Board& s,
                             int reward,
                             Board& s2,
                             bool done){
+    if(a==Move::None) return;
+
     std::string s1 = s.MaptoString();
     std::string s2k = s2.MaptoString();
 
@@ -44,10 +47,15 @@ void LearningAgent::observe(Board& s,
 
     int ai = (int)a;
 
-    double maxQ2 = 0;
+    double maxQ2 = 0.0;
     if(!done){
-        maxQ2 = *std::max_element(Q[s2k].begin(),
-                                  Q[s2k].end());
+        auto nextMoves = s2.generateMoves();
+        if(!nextMoves.empty()){
+            maxQ2 = -1e9;
+            for(Move m : nextMoves){
+                maxQ2 = std::max(maxQ2, Q[s2k][(int)m]);
+            }
+        }
     }
 
     Q[s1][ai] += alpha * (reward + gamma * maxQ2 - Q[s1][ai]);

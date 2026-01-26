@@ -1,9 +1,10 @@
 #include "Trainer.h"
 #include <cstdlib>
+#include <ctime>
 
 Board randomTrainingMap(){
     Map temp_map;
-    int idx = rand() % temp_map.getLevelCount()/4;
+    int idx = rand() % temp_map.getLevelCount();
     Board b;
     b.current_map=temp_map.getMap(idx);
     bool find=false;
