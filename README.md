@@ -10,7 +10,7 @@
 - AI 自动解答（使用了A*算法，受算力和内存限制，5 秒内无法求解则强制停止AI求解进程）
 - 最优步数提示
 - 配备了简单的机器学习AI，Q表学习简单关卡成功率极高，但因为状态多且复杂，复杂关卡无法成功；DQN学习因为各关卡地图大小不同，难以统一，故进行单个关卡进行训练，但效果仍然不佳。甚至出现100%通过率后，再次学习后通过率为0的情况。即使通过与最优解相差依旧巨大。代码仅供参考，实际效果不佳。
-- 通过EnvServer.cpp建立cpp-python通信协议，实现了同一项目中，c++和python的混用，以发挥各自语言的有点。
+- 通过EnvServer.cpp建立cpp-python通信协议，实现了同一项目中，c++和python的混用，以发挥各自语言的优点。
 
 ---
 
@@ -73,3 +73,42 @@ python test_dqn.py
 <a href="https://github.com/Lhz0711">
   <img src="https://github.com/Lhz0711.png" width="50" />
 </a>
+
+# 开发工具与库下载网址
+
+## 🧰 MinGW（Windows 下的 GCC 编译器）
+- **MinGW‑w64 官方主页**  
+  [https://www.mingw-w64.org/](https://www.mingw-w64.org/)
+- **MinGW‑w64 下载页面（预构建发行版）**  
+  [https://www.mingw-w64.org/downloads/](https://www.mingw-w64.org/downloads/)
+- **SourceForge 上的 MinGW 安装包**  
+  [https://sourceforge.net/projects/mingw/files/latest/download](https://sourceforge.net/projects/mingw/files/latest/download)
+
+> 💡 建议使用 **MinGW‑w64**，支持 32/64 位 Windows，更新活跃。
+
+---
+
+## 🧩 CMake（跨平台构建系统）
+- **CMake 官方下载页**  
+  [https://cmake.org/download/](https://cmake.org/download/)
+
+可下载 Windows/Mac/Linux 的安装程序或压缩包。
+
+---
+
+## 🎨 SFML（Simple and Fast Multimedia Library）
+- **SFML 官方下载页**  
+  [https://www.sfml-dev.org/download.php](https://www.sfml-dev.org/download.php)
+- **SFML 官方文档与入门教程**  
+  [https://www.sfml-dev.org/tutorials/3.0/](https://www.sfml-dev.org/tutorials/3.0/)
+
+> 包含 CMake/MinGW、VS 等多种开发环境的设置教程。
+
+---
+
+## 🐍 PyTorch（深度学习库）
+- **PyTorch 官方安装/开始页面**  
+  [https://pytorch.org/get-started/locally/](https://pytorch.org/get-started/locally/)
+
+可根据系统、Python 包管理器、CUDA 版本生成适合的安装命令。
+
