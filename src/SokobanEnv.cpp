@@ -12,8 +12,10 @@ bool SokobanEnv::isDone(){
 
 StepResult SokobanEnv::step(Move m){
     //m应为合法
+    if(!cur.canMove(m)){
+        return {cur, -10, false};
+    }
     
-    //
     Board next=cur.applyMove(m);
     int reward=-1;
 

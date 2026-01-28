@@ -27,27 +27,28 @@ file(GLOB_RECURSE SOKOBAN_SOURCES
     src/*.cpp
 )
 
-# ===== 可执行文件 =====
-add_executable(Sokoban
-    ${SOKOBAN_SOURCES}
-)
+# ===== 核心库 =====
+add_library(SokobanCore ${SOKOBAN_SOURCES})
 
-# ===== 头文件搜索路径 =====
-target_include_directories(Sokoban
-    PRIVATE
-        ${PROJECT_SOURCE_DIR}/include
-)
+target_include_directories(SokobanCore PUBLIC include)
 
-# ===== 链接 SFML =====
-target_link_libraries(Sokoban
-    PRIVATE
+target_link_libraries(SokobanCore
+    PUBLIC
         SFML::Graphics
         SFML::Window
         SFML::System
         SFML::Audio
 )
 
-# ===== 复制 assets 到构建目录（可选但强烈推荐）=====
+# ===== 游戏程序 =====
+add_executable(Sokoban src/main.cpp)
+target_link_libraries(Sokoban PRIVATE SokobanCore)
+
+# ===== 训练环境 =====
+add_executable(EnvServer env_interface/EnvServer.cpp)
+target_link_libraries(EnvServer PRIVATE SokobanCore)
+
+# ===== 资源复制 =====
 add_custom_target(copy_assets ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${PROJECT_SOURCE_DIR}/assets

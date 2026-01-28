@@ -3,3 +3,5 @@
 *.exe
 *.bat
 *.bin
+/python/__pycache__
+*.pth

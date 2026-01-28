@@ -25,7 +25,7 @@ void Board::Init_player_position(){
 
 std::string Board::MaptoString(){
     std::string s;
-    for(const auto& row:current_map) s+=row;
+    for(const auto& row:current_map) {s+=row;s.push_back('\n');}
     return s;
 }
 
@@ -90,6 +90,13 @@ std::vector<Move> Board::generateMoves(){
         }
     }
     return moves;
+}
+
+bool Board::canMove(Move m){
+    for(Move move:generateMoves()){
+        if(move==m) return true;
+    }
+    return false;
 }
 
 Board Board::applyMove(Move move){

@@ -14,7 +14,6 @@ static const std::vector<std::vector<int>> dir={{-1,0},{1,0},{0,-1},{0,1}};
 
 class Board{
     void Init_player_position();
-    std::string MaptoString();
 
     bool isDeadCorner(int x,int y);
 
@@ -30,7 +29,10 @@ public:
 
     Board();
 
+    std::string MaptoString();
+
     std::vector<Move> generateMoves();
+    bool canMove(Move m);
     Board applyMove(Move move);
     bool isTerminal();
     bool boxOnTargetIncreased(Board &b);

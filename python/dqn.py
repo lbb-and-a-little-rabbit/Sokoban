@@ -1,228 +1,158 @@
 import subprocess
-import torch
-import torch.nn as nn
-import torch.optim as optim
 import random
+import torch
+import torch.optim as optim
+import torch.nn.functional as F
 from collections import deque
-import time
 
-# ======================
-# 参数区（你之后主要调这里）
-# ======================
+from model import DQN
+from utils import mapstr_to_tensor, infer_input_dim_from_map
 
-ENV_PATH = "../build/EnvServer.exe"   # 改成你的实际路径
-STATE_DIM = 32                        # 你 encode 后的维度（必须固定）
+# ===== Config =====
+ENV_PATH = "../build/EnvServer.exe"
+LEVEL_ID = "0"          # 固定训练第 x 关，根据需要修改
 ACTION_DIM = 4
 
 GAMMA = 0.99
 LR = 1e-3
 BATCH_SIZE = 64
 MEMORY_SIZE = 50000
+TARGET_UPDATE = 1000
 
 EPS_START = 1.0
 EPS_END = 0.05
 EPS_DECAY = 0.9995
 
-TARGET_UPDATE = 1000
+MAX_STEPS_PER_EP = 100000
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# ======================
-# DQN 网络
-# ======================
-
-class DQN(nn.Module):
-    def __init__(self, state_dim, action_dim):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(state_dim, 256),
-            nn.ReLU(),
-            nn.Linear(256, 256),
-            nn.ReLU(),
-            nn.Linear(256, action_dim)
-        )
-
-    def forward(self, x):
-        return self.net(x)
-
-
-# ======================
-# 状态解析（你可按 encode 改）
-# ======================
-
-def parse_state(state_str: str) -> torch.Tensor:
-    """
-    示例 state_str:
-    P(5,6)|B(2,1);(4,3)|T(1,0);(3,2)
-
-    规则：
-    - 只提取数字（含负数）
-    - 长度必须固定
-    """
-    nums = []
-    i = 0
-    while i < len(state_str):
-        if state_str[i] == '-' or state_str[i].isdigit():
-            j = i + 1
-            while j < len(state_str) and state_str[j].isdigit():
-                j += 1
-            nums.append(int(state_str[i:j]))
-            i = j
-        else:
-            i += 1
-
-    if len(nums) != STATE_DIM:
-        raise ValueError(f"State dim mismatch: got {len(nums)}, expect {STATE_DIM}")
-
-    return torch.tensor(nums, dtype=torch.float32, device=DEVICE)
-
-
-# ======================
-# Replay Buffer
-# ======================
-
-class ReplayBuffer:
-    def __init__(self, capacity):
-        self.buffer = deque(maxlen=capacity)
-
-    def push(self, s, a, r, s2, d):
-        self.buffer.append((s, a, r, s2, d))
-
-    def sample(self, batch_size):
-        batch = random.sample(self.buffer, batch_size)
-        s, a, r, s2, d = zip(*batch)
-        return (
-            torch.stack(s),
-            torch.tensor(a, device=DEVICE),
-            torch.tensor(r, device=DEVICE),
-            torch.stack(s2),
-            torch.tensor(d, device=DEVICE)
-        )
-
-    def __len__(self):
-        return len(self.buffer)
-
-
-# ======================
-# 启动环境进程
-# ======================
-
+# ===== Launch Env =====
 env = subprocess.Popen(
-    [ENV_PATH],
+    [ENV_PATH, LEVEL_ID],
     stdin=subprocess.PIPE,
     stdout=subprocess.PIPE,
+    stderr=subprocess.DEVNULL,
     text=True,
     bufsize=1
 )
 
-# ======================
-# 初始化网络
-# ======================
+# ===== Replay Buffer =====
+class ReplayBuffer:
+    def __init__(self, cap):
+        self.buf = deque(maxlen=cap)
 
-policy_net = DQN(STATE_DIM, ACTION_DIM).to(DEVICE)
-target_net = DQN(STATE_DIM, ACTION_DIM).to(DEVICE)
-target_net.load_state_dict(policy_net.state_dict())
-target_net.eval()
+    def push(self, s, a, r, s2, d):
+        self.buf.append((s, a, r, s2, d))
 
-optimizer = optim.Adam(policy_net.parameters(), lr=LR)
+    def sample(self, n):
+        batch = random.sample(self.buf, n)
+        s, a, r, s2, d = zip(*batch)
+        return (
+            torch.stack(s).to(DEVICE),
+            torch.tensor(a, device=DEVICE),
+            torch.tensor(r, dtype=torch.float32, device=DEVICE),
+            torch.stack(s2).to(DEVICE),
+            torch.tensor(d, dtype=torch.float32, device=DEVICE),
+        )
+
+    def __len__(self):
+        return len(self.buf)
+
 memory = ReplayBuffer(MEMORY_SIZE)
+
+# ===== Read initial state =====
+print("Waiting for EnvServer...")
+line = env.stdout.readline().strip()
+state_str, _, _ = line.split("\t")
+input_dim = infer_input_dim_from_map(state_str)
+print("Input dim:", input_dim)
+
+policy = DQN(input_dim, ACTION_DIM).to(DEVICE)
+target = DQN(input_dim, ACTION_DIM).to(DEVICE)
+target.load_state_dict(policy.state_dict())
+
+optimizer = optim.Adam(policy.parameters(), lr=LR)
 
 epsilon = EPS_START
 global_step = 0
+episode_step = 0
 
-# ======================
-# 训练一步
-# ======================
+def select_action(s):
+    global epsilon
+    if random.random() < epsilon:
+        return random.randrange(ACTION_DIM)
+    with torch.no_grad():
+        q = policy(s.unsqueeze(0))
+        return int(q.argmax(1))
 
 def train_step():
     if len(memory) < BATCH_SIZE:
-        return
+        return None
 
     s, a, r, s2, d = memory.sample(BATCH_SIZE)
-
-    q = policy_net(s).gather(1, a.unsqueeze(1)).squeeze(1)
+    q = policy(s).gather(1, a.unsqueeze(1)).squeeze(1)
 
     with torch.no_grad():
-        max_q_next = target_net(s2).max(1)[0]
-        target_q = r + GAMMA * max_q_next * (1 - d)
+        q_next = target(s2).max(1)[0]
+        y = r + GAMMA * q_next * (1 - d)
 
-    loss = nn.functional.mse_loss(q, target_q)
-
+    loss = F.mse_loss(q, y)
     optimizer.zero_grad()
     loss.backward()
-    nn.utils.clip_grad_norm_(policy_net.parameters(), 10.0)
+    torch.nn.utils.clip_grad_norm_(policy.parameters(), 10)
     optimizer.step()
+    return loss.item()
 
-
-# ======================
-# 主循环
-# ======================
-
-print("🚀 DQN training started")
-
+print("Start training...")
 try:
     while True:
-        # 读取环境输出
-        line = env.stdout.readline()
-        if not line:
-            break
+        state_str, reward_str, done_str = line.split("\t")
+        s = mapstr_to_tensor(state_str, device=DEVICE)
 
-        line = line.strip()
-        if not line:
-            continue
-
-        # 拆行
-        try:
-            state_str, reward_str, done_str = line.split()
-        except ValueError:
-            print("⚠ Bad env output:", line)
-            continue
-
-        state = parse_state(state_str)
-        reward = float(reward_str)
-        done = float(done_str)
-
-        # ε-greedy
-        if random.random() < epsilon:
-            action = random.randint(0, ACTION_DIM - 1)
-        else:
-            with torch.no_grad():
-                action = policy_net(state).argmax().item()
-
-        # 发送 action
+        action = select_action(s)
         env.stdin.write(f"{action}\n")
         env.stdin.flush()
 
-        # 读 step 后状态
-        next_line = env.stdout.readline().strip()
-        next_state_str, next_reward_str, next_done_str = next_line.split()
+        next_line = env.stdout.readline()
+        if not next_line:
+            break
+        next_line = next_line.strip()
 
-        next_state = parse_state(next_state_str)
-        next_reward = float(next_reward_str)
-        next_done = float(next_done_str)
+        ns_str, r_str, d_str = next_line.split("\t")
+        r = float(r_str)
+        d = int(d_str)
 
-        memory.push(state, action, next_reward, next_state, next_done)
+        if d or episode_step >= MAX_STEPS_PER_EP:
+            s2 = torch.zeros_like(s)
+            memory.push(s.cpu(), action, r, s2.cpu(), 1)
+            episode_step = 0
 
-        train_step()
+            # 读取 reset 后的新初始状态
+            line = env.stdout.readline().strip()
+        else:
+            s2 = mapstr_to_tensor(ns_str, device=DEVICE)
+            memory.push(s.cpu(), action, r, s2.cpu(), 0)
+            episode_step += 1
+            line = next_line
 
+        loss = train_step()
         epsilon = max(EPS_END, epsilon * EPS_DECAY)
 
-        if global_step % TARGET_UPDATE == 0:
-            target_net.load_state_dict(policy_net.state_dict())
-
         if global_step % 1000 == 0:
-            print(
-                f"[{global_step}] "
-                f"epsilon={epsilon:.3f} "
-                f"buffer={len(memory)}"
-            )
+            print(f"[{global_step}] eps={epsilon:.3f} buf={len(memory)} loss={loss}")
+
+        if global_step % TARGET_UPDATE == 0 and global_step > 0:
+            target.load_state_dict(policy.state_dict())
+            print("Target updated")
 
         global_step += 1
+        line = next_line
 
 except KeyboardInterrupt:
-    print("⛔ Training interrupted")
+    print("Stopped")
 
 finally:
+    torch.save(policy.state_dict(), "dqn_sokoban.pth")
+    print("Model saved")
     env.terminate()
-    torch.save(policy_net.state_dict(), "dqn_sokoban.pt")
-    print("✅ Model saved to dqn_sokoban.pt")

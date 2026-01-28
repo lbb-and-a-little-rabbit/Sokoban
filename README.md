@@ -7,11 +7,10 @@
 本项目为对推箱子游戏的简易复刻，提供以下功能：
 - 多关卡关卡设计
 - 存档系统
-- AI 自动解答（受算力限制，5 秒内无法求解则停止）
+- AI 自动解答（使用了A*算法，受算力和内存限制，5 秒内无法求解则强制停止AI求解进程）
 - 最优步数提示
-- 配备了简单的机器学习AI,简单训练集可达60%正确率;复杂训练集正确率在10%左右，有待提高。
-
-<img src="assets/TrainResult.png"/>
+- 配备了简单的机器学习AI，Q表学习简单关卡成功率极高，但因为状态多且复杂，复杂关卡无法成功；DQN学习因为各关卡地图大小不同，难以统一，故进行单个关卡进行训练，但效果仍然不佳。甚至出现100%通过率后，再次学习后通过率为0的情况。即使通过与最优解相差依旧巨大。代码仅供参考，实际效果不佳。
+- 通过EnvServer.cpp建立cpp-python通信协议，实现了同一项目中，c++和python的混用，以发挥各自语言的有点。
 
 ---
 
@@ -38,6 +37,7 @@
 - CMake 3.15+
 - MinGW（Windows）或其他支持 C++17 的编译器
 - SFML3.x（用于渲染）
+- PyTorch（用于RL）
 
 ### 使用方法
 正常游戏
@@ -48,11 +48,23 @@ cmake --build build
 ```
 
 
-AI训练
+AI训练 --qtable
 ```bash
 cmake -S . -B build -G "MinGW Makefiles"
 cmake --build build
 ./build\Sokoban --train
+```
+
+AI训练 --DQN
+```bash
+cmake -S . -B build -G "MinGW Makefiles"
+cmake --build build
+cd python
+python dqn.py
+```
+学习结果检验
+```bash
+python test_dqn.py
 ```
 
 ## ❤️ 鸣谢
