@@ -18,7 +18,7 @@ LevelSelect::LevelSelect(sf::RenderWindow &window,int maxLevel)
     backgroundSprite.setScale(scale);
 
     // Menu 文本
-    MenuText.setString("Back to menu");
+    MenuText.setString(L"返回菜单");
     MenuText.setCharacterSize(48);
     MenuText.setFillColor(sf::Color::White);
     MenuText.setPosition({400.f, 50.f});
@@ -34,7 +34,7 @@ LevelSelect::LevelSelect(sf::RenderWindow &window,int maxLevel)
         int row = i % 5;  // 第几行
 
         sf::Text text(font);
-        text.setString("Level " + std::to_string(i));
+        text.setString(L"关卡 " + std::to_wstring(i));
         text.setPosition({startX + col * gapX, startY + row * gapY});
         levelTexts.push_back(text);
     }

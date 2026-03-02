@@ -32,14 +32,14 @@ Game::Game(sf::RenderWindow &window,unsigned int w,unsigned int h,int cur_level)
     helpTexts.push_back(title);
 
     // 内容
-    std::vector<std::string> lines = {
-        "W / A / S / D    Move",
-        "R               Restart",
-        "Space           Next Level",
-        "H               Hint",
-        "P               AI Solver",
-        "Tab             Show/Close",
-        "Esc             Back To Menu"
+    std::vector<std::wstring> lines = {
+        L"W / A / S / D\t移动",
+        L"R            \t重新开始",
+        L"Space        \t下一关",
+        L"H            \t提示",
+        L"P            \tAI解决",
+        L"Tab          \t打开/关闭该界面",
+        L"Esc          \t返回菜单"
     };
 
     float y = 60.f;

@@ -18,19 +18,19 @@ Menu::Menu(sf::RenderWindow &window)
     backgroundSprite.setScale(scale);
 
     // Start Game 文本
-    startText.setString("New Game");
+    startText.setString(L"新游戏");
     startText.setCharacterSize(48);
     startText.setFillColor(sf::Color::White);
     startText.setPosition({300.f, 250.f});
 
     // Level 文本
-    levelText.setString("Select Level");
+    levelText.setString(L"选择关卡");
     levelText.setCharacterSize(48);
     levelText.setFillColor(sf::Color::White);
     levelText.setPosition({300.f, 330.f});
 
     // Exit 文本
-    exitText.setString("Exit");
+    exitText.setString(L"退出");
     exitText.setCharacterSize(48);
     exitText.setFillColor(sf::Color::White);
     exitText.setPosition({300.f, 410.f});
