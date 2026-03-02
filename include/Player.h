@@ -4,6 +4,8 @@
 #include <SFML/Audio.hpp>
 #include <iostream>
 
+#include "physfs_assistant.h"
+
 class Player{
     //Time
     float elapsedTime = 0.f;
@@ -17,4 +19,5 @@ class Player{
 
 public:
     Player(float x, float y, float width, float height); 
+    static void LoadTextures(); // 在 PhysFS 挂载后调用一次
 };

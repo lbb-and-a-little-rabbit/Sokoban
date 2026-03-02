@@ -5,3 +5,4 @@
 *.bin
 /python/__pycache__
 *.pth
+*.pak

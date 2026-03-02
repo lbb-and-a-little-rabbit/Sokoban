@@ -3,7 +3,25 @@
 #include "LevelSelect.h"
 #include <ctime>
 
+#include <physfs.h>
+
 int main(int argc, char** argv){
+    std::cout << "loading...";
+
+    PHYSFS_init(nullptr);
+    // 挂载 data.pak
+    PHYSFS_mount("data.pak", "/", 1);
+
+    //INIT_ASSETS
+    Box::LoadTextures();
+    Player::LoadTextures();
+    Target::LoadTextures();
+    Wall::LoadTextures();
+    LevelSelect::LoadTextures();
+    Menu::LoadTextures();
+    Game::LoadTextures();
+    //INIT_ASSETS
+
     srand((unsigned)time(nullptr));
 
     sf::RenderWindow window(sf::VideoMode({800,600}),"SoKoban");

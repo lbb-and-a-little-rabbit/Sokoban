@@ -2,11 +2,28 @@
 #include <iostream>
 
 // ===== 静态成员定义 =====
-sf::Texture Menu::backgroundTexture("assets/menu_background.png");
+sf::Texture Menu::backgroundTexture;
+std::vector<char> Menu::fontData;
+std::vector<char> Menu::musicData;
+sf::Font Menu::font;
+
+void Menu::LoadTextures(){
+    auto data=LoadFile("assets/menu_background.png");
+    if(!backgroundTexture.loadFromMemory(data.data(),data.size())){
+        std::cerr << "Failed to load!";
+        exit(-1);
+    }
+
+    fontData=LoadFile("assets/uifont.ttf");
+    if(!font.openFromMemory(fontData.data(),fontData.size())){
+        std::cerr << "Failed to load!";
+        exit(-1);
+    }
+}
 
 // ===== 构造函数 =====
 Menu::Menu(sf::RenderWindow &window)
-: window(window),backgroundSprite(backgroundTexture),font("assets/uifont.ttf"),startText(font),levelText(font),exitText(font)
+: window(window),backgroundSprite(backgroundTexture),startText(font),levelText(font),exitText(font)
 {
     // 缩放铺满窗口
     sf::Vector2u textureSize = backgroundTexture.getSize();
@@ -36,7 +53,8 @@ Menu::Menu(sf::RenderWindow &window)
     exitText.setPosition({300.f, 410.f});
 
     // 菜单音乐
-    if (currentMusic.openFromFile("assets/temple.wav")) {
+    musicData=LoadFile("assets/temple.wav");
+    if (currentMusic.openFromMemory(musicData.data(),musicData.size())) {
         currentMusic.setLooping(true);
         currentMusic.play();
     }

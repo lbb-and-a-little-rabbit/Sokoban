@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 
+#include "physfs_assistant.h"
+
 struct SaveData {
     int maxUnlockedLevel = 0;
 };

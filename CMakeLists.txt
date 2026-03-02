@@ -40,6 +40,10 @@ target_link_libraries(SokobanCore
         SFML::Audio
 )
 
+# 链接 PhysFS
+target_link_libraries(SokobanCore PUBLIC "D:/physfs/physfs/build/libphysfs.a")
+target_include_directories(SokobanCore PUBLIC "D:/physfs/physfs/src")
+
 # ===== 游戏程序 =====
 add_executable(Sokoban src/main.cpp)
 target_link_libraries(Sokoban PRIVATE SokobanCore)

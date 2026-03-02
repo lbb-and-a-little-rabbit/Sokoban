@@ -2,6 +2,9 @@
 
 #include <SFML/Graphics.hpp>
 #include <vector>
+#include <iostream>
+
+#include "physfs_assistant.h"
 
 class Target {
     //Time
@@ -17,5 +20,6 @@ class Target {
 
 public:
     Target(float x, float y, float width, float height);
+    static void LoadTextures(); // 在 PhysFS 挂载后调用一次
     //void update(float dt);
 };

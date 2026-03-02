@@ -1,24 +1,43 @@
 #include "Game.h"
 
-Game::Game(sf::RenderWindow &window,unsigned int w,unsigned int h,int cur_level) : window(window),player(nullptr),Window_Width(w),Window_Height(h),current_level(cur_level),walkbuffer("assets/walk.ogg"),walksound(walkbuffer) {
+sf::SoundBuffer Game::walkbuffer;
+std::vector<char> Game::fontData;
+std::vector<char> Game::bgmData;
+std::vector<char> Game::level_comData;
+
+void Game::LoadTextures(){
+    auto bufferdata=LoadFile("assets/walk.ogg");
+    if(!walkbuffer.loadFromMemory(bufferdata.data(),bufferdata.size())){
+        std::cerr << "Failed to load!";
+        exit(-1);
+    }
+
+    fontData=LoadFile("assets/uifont.ttf");
+
+    bgmData=LoadFile("assets/scattered_and_lost.mp3");
+
+    level_comData=LoadFile("assets/level_win.mp3");
+}
+
+Game::Game(sf::RenderWindow &window,unsigned int w,unsigned int h,int cur_level) : window(window),player(nullptr),Window_Width(w),Window_Height(h),current_level(cur_level),walksound(walkbuffer) {
     //window.setFramerateLimit(60);
     current_board.current_map=maps_assistant.getMap(current_level); 
     current_board.Init_player_position();
     Set_based_on_board();
 
     //set music
-    if (!music.openFromFile("assets/scattered_and_lost.mp3")) {
+    if (!music.openFromMemory(bgmData.data(),bgmData.size())) {
         std::cerr << "Music Loading Failed!\n";
         exit(-1);
     }
     music.setLooping(true);
-    if (!level_complete.openFromFile("assets/level_win.mp3")) {
+    if (!level_complete.openFromMemory(level_comData.data(),level_comData.size())) {
         std::cerr << "Music Loading Failed!\n";
         exit(-1);
     }
 
     //set Text
-    if (!uiFont.openFromFile("assets/uifont.ttf")) {
+    if (!uiFont.openFromMemory(fontData.data(),fontData.size())) {
         std::cerr << "Font load failed\n";
         exit(-1);
     }

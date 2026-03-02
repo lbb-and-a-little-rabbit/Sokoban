@@ -1,16 +1,22 @@
 #include "Wall.h"
 
-sf::Texture wall1("assets/wall.png");
-
 std::vector<sf::Texture> Wall::wallTextures;
 
-Wall::Wall(float x, float y, float width, float height) : wallSprite(wall1) {
+void Wall::LoadTextures(){
+    if(wallTextures.empty()){
+        auto data=LoadFile("assets/wall.png");
+        sf::Texture wall1;
+        if(!wall1.loadFromMemory(data.data(),data.size())){
+            std::cerr << "Failed to load!";
+            exit(-1);
+        }
+        wallTextures.push_back(std::move(wall1));
+    }
+}
+
+Wall::Wall(float x, float y, float width, float height) : wallSprite(wallTextures[0]) {
     shape.setSize({width, height});
     shape.setPosition({x, y});
-
-    if(wallTextures.size()<1){
-        wallTextures.push_back(wall1);
-    }
 
     wallSprite.setPosition({x, y});
     sf::Vector2u textureSize = wallTextures[0].getSize();

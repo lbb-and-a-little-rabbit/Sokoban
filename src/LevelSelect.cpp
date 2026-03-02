@@ -2,11 +2,27 @@
 #include <iostream>
 
 // ===== 静态成员定义 =====
-sf::Texture LevelSelect::backgroundTexture("assets/menu_background.png");
+sf::Texture LevelSelect::backgroundTexture;
+std::vector<char> LevelSelect::fontData;
+sf::Font LevelSelect::font;
+
+void LevelSelect::LoadTextures() {
+    auto data=LoadFile("assets/menu_background.png");
+    if(!backgroundTexture.loadFromMemory(data.data(),data.size())){
+        std::cerr << "Failed to load!";
+        exit(-1);
+    }
+
+    fontData=LoadFile("assets/uifont.ttf");
+    if(!font.openFromMemory(fontData.data(),fontData.size())){
+        std::cerr << "Failed to load!";
+        exit(-1);
+    }
+}
 
 // ===== 构造函数 =====
 LevelSelect::LevelSelect(sf::RenderWindow &window,int maxLevel)
-: window(window),backgroundSprite(backgroundTexture),font("assets/uifont.ttf"),maxLevel(maxLevel),MenuText(font)
+: window(window),backgroundSprite(backgroundTexture),maxLevel(maxLevel),MenuText(font)
 {
     // 缩放铺满窗口
     sf::Vector2u textureSize = backgroundTexture.getSize();

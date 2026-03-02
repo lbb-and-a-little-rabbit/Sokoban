@@ -41,12 +41,15 @@ class Game{
     float autoSolveInterval = 0.3f;
 
     //music
+    static std::vector<char> bgmData;
     sf::Music music;
-    sf::SoundBuffer walkbuffer;
+    static sf::SoundBuffer walkbuffer;
     sf::Sound walksound;
+    static std::vector<char> level_comData;
     sf::Music level_complete;
 
     //Text
+    static std::vector<char> fontData;
     sf::Font uiFont;
     std::vector<sf::Text> helpTexts;
     bool showHelp = true;
@@ -63,6 +66,7 @@ class Game{
 
 public:
     Game(sf::RenderWindow &window,unsigned int w=800,unsigned int h=600,int cur_level=0);
+    static void LoadTextures(); // 在 PhysFS 挂载后调用一次
 
     void run();
 };

@@ -1,16 +1,22 @@
 #include "Player.h"
 
-sf::Texture player1("assets/player.png");
-
 std::vector<sf::Texture> Player::playerTextures;
 
-Player::Player(float x, float y, float width, float height) : playerSprite(player1) {
+void Player::LoadTextures(){
+    if(playerTextures.empty()){
+        auto data=LoadFile("assets/player.png");
+        sf::Texture player1;
+        if(!player1.loadFromMemory(data.data(),data.size())){
+            std::cerr << "Failed to load!";
+            exit(-1);
+        }
+        playerTextures.push_back(std::move(player1));
+    }
+}
+
+Player::Player(float x, float y, float width, float height) : playerSprite(playerTextures[0]) {
     shape.setSize({width, height});
     shape.setPosition({x, y});
-
-    if(playerTextures.size()<1){
-        playerTextures.push_back(player1);
-    }
 
     playerSprite.setPosition({x, y});
     sf::Vector2u textureSize = playerTextures[0].getSize();
