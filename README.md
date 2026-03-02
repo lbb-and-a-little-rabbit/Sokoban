@@ -11,6 +11,7 @@
 - 最优步数提示
 - 配备了简单的机器学习AI，Q表学习简单关卡成功率极高，但因为状态多且复杂，复杂关卡无法成功；DQN学习因为各关卡地图大小不同，难以统一，故进行单个关卡进行训练，但效果仍然不佳。甚至出现100%通过率后，再次学习后通过率为0的情况。即使通过与最优解相差依旧巨大。代码仅供参考，实际效果不佳。
 - 通过EnvServer.cpp建立cpp-python通信协议，实现了同一项目中，c++和python的混用，以发挥各自语言的优点。
+- 使用了PhysFS和异或运算进行了资源和存档的隐藏。
 
 ---
 
@@ -112,3 +113,17 @@ python test_dqn.py
 
 可根据系统、Python 包管理器、CUDA 版本生成适合的安装命令。
 
+---
+
+📦 PhysFS（PhysicsFS 文件系统库）
+
+PhysicsFS 官方主页
+https://icculus.org/physfs/
+
+PhysicsFS GitHub 仓库
+https://github.com/icculus/physfs
+
+PhysicsFS 官方文档
+https://icculus.org/physfs/docs/html/
+
+PhysFS 是一个轻量级跨平台文件系统抽象库，常用于游戏资源打包与虚拟文件系统管理。本项目使用 PhysFS 结合异或加密对资源文件与存档进行简单隐藏处理。

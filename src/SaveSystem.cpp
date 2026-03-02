@@ -1,28 +1,57 @@
 #include "SaveSystem.h"
-#include <fstream>
-#include <filesystem>
+#include "EncryptedPak.h"
+#include <physfs.h>
+#include <sstream>
 
-SaveData SaveSystem::load() {
+SaveData SaveSystem::load()
+{
     SaveData data;
 
-    // 确保 save 目录存在
-    std::filesystem::create_directory(SAVE_DIR);
-
-    std::ifstream in(SAVE_FILE);
-    if(!in.is_open()){
-        // 第一次运行，没有存档
+    if (!PHYSFS_exists(SAVE_FILE))
         return data;
-    }
+
+    PHYSFS_File* file = PHYSFS_openRead(SAVE_FILE);
+    if (!file)
+        return data;
+
+    PHYSFS_sint64 len = PHYSFS_fileLength(file);
+
+    std::vector<char> buffer(len);
+    PHYSFS_readBytes(file, buffer.data(), len);
+    PHYSFS_close(file);
+
+    // ===== 解密 =====
+    buffer = DecryptBuffer(buffer);
+
+    // 解析文本
+    std::string content(buffer.begin(), buffer.end());
+    std::istringstream iss(content);
 
     std::string key;
     char eq;
-    in >> key >> eq >> data.maxUnlockedLevel;
+    iss >> key >> eq >> data.maxUnlockedLevel;
+
     return data;
 }
 
-void SaveSystem::save(const SaveData& data) {
-    std::filesystem::create_directory(SAVE_DIR);
+void SaveSystem::save(const SaveData& data)
+{
+    PHYSFS_mkdir(SAVE_DIR);
 
-    std::ofstream out(SAVE_FILE);
-    out << "maxUnlockedLevel = " << data.maxUnlockedLevel;
+    std::ostringstream oss;
+    oss << "maxUnlockedLevel = " << data.maxUnlockedLevel;
+
+    std::string text = oss.str();
+
+    std::vector<char> buffer(text.begin(), text.end());
+
+    // ===== 加密 =====
+    buffer = EncryptBuffer(buffer);
+
+    PHYSFS_File* file = PHYSFS_openWrite(SAVE_FILE);
+    if (!file)
+        return;
+
+    PHYSFS_writeBytes(file, buffer.data(), buffer.size());
+    PHYSFS_close(file);
 }

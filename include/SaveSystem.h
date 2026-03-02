@@ -14,5 +14,5 @@ public:
 
 private:
     static constexpr const char* SAVE_DIR = "save";
-    static constexpr const char* SAVE_FILE = "save/save.txt";
+    static constexpr const char* SAVE_FILE = "save/save.gxyz";
 };

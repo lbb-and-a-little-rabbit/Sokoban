@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "Menu.h"
 #include "LevelSelect.h"
+#include "EncryptedPak.h"
 #include <ctime>
 
 #include <physfs.h>
@@ -9,8 +10,17 @@ int main(int argc, char** argv){
     std::cout << "loading...";
 
     PHYSFS_init(nullptr);
-    // 挂载 data.pak
-    PHYSFS_mount("data.pak", "/", 1);
+
+    // 允许读当前目录
+    PHYSFS_mount(".", nullptr, 0);
+
+    // 设置写入目录
+    PHYSFS_setWriteDir(".");
+
+    if (!MountEncryptedPak("data.sxk")) {
+        std::cout << "Failed to mount encrypted pak\n";
+        return -1;
+    }
 
     //INIT_ASSETS
     Box::LoadTextures();
@@ -28,7 +38,8 @@ int main(int argc, char** argv){
 
     // 加载图标
     sf::Image icon;
-    if (!icon.loadFromFile("assets/target_box.png")) {
+    auto icondata=LoadFile("assets/target_box.png");
+    if (!icon.loadFromMemory(icondata.data(),icondata.size())) {
         // 加载失败可用默认
         std::cout << "Failed to load icon.png!" << std::endl;
     } else {
