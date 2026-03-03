@@ -4,6 +4,7 @@
 
 #include "SaveSystem.h"
 #include "physfs_assistant.h"
+#include "EncryptedPak.h"
 
 enum class MenuResult {
     None,

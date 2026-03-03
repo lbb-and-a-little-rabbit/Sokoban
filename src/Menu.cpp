@@ -27,7 +27,7 @@ Menu::Menu(sf::RenderWindow &window)
 {
     // 缩放铺满窗口
     sf::Vector2u textureSize = backgroundTexture.getSize();
-    sf::Vector2u windowSize = window.getSize();
+    sf::Vector2f windowSize = window.getView().getSize();
     sf::Vector2f scale(
         float(windowSize.x) / textureSize.x,
         float(windowSize.y) / textureSize.y
@@ -53,8 +53,8 @@ Menu::Menu(sf::RenderWindow &window)
     exitText.setPosition({300.f, 410.f});
 
     // 菜单音乐
-    musicData=LoadFile("assets/temple.wav");
-    if (currentMusic.openFromMemory(musicData.data(),musicData.size())) {
+    std::string path = DecryptToTempFile("assets/temple.wav");
+    if (currentMusic.openFromFile(path)) {
         currentMusic.setLooping(true);
         currentMusic.play();
     }

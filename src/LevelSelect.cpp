@@ -26,7 +26,7 @@ LevelSelect::LevelSelect(sf::RenderWindow &window,int maxLevel)
 {
     // 缩放铺满窗口
     sf::Vector2u textureSize = backgroundTexture.getSize();
-    sf::Vector2u windowSize = window.getSize();
+    sf::Vector2f windowSize = window.getView().getSize();
     sf::Vector2f scale(
         float(windowSize.x) / textureSize.x,
         float(windowSize.y) / textureSize.y

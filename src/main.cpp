@@ -3,6 +3,7 @@
 #include "LevelSelect.h"
 #include "EncryptedPak.h"
 #include <ctime>
+#include <filesystem>
 
 #include <physfs.h>
 
@@ -16,6 +17,8 @@ int main(int argc, char** argv){
 
     // 设置写入目录
     PHYSFS_setWriteDir(".");
+
+    std::filesystem::create_directory("temp");
 
     if (!MountEncryptedPak("data.sxk")) {
         std::cout << "Failed to mount encrypted pak\n";
@@ -35,6 +38,8 @@ int main(int argc, char** argv){
     srand((unsigned)time(nullptr));
 
     sf::RenderWindow window(sf::VideoMode({800,600}),"SoKoban");
+    sf::View view(sf::FloatRect({0.f,0.f},{(float)window.getSize().x,(float)window.getSize().y}));
+    window.setView(view);
 
     // 加载图标
     sf::Image icon;
@@ -118,4 +123,7 @@ menu_label:
             goto menu_label;
         }
     }
+
+    std::filesystem::remove_all("temp");
+    PHYSFS_deinit();
 }
