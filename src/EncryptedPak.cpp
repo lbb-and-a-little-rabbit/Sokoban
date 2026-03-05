@@ -57,6 +57,7 @@ std::vector<char> DecryptBuffer(const std::vector<char>& data){
     return result;
 }
 
+/*
 std::string DecryptToTempFile(const std::string& virtualPath){
     PHYSFS_File* file = PHYSFS_openRead(virtualPath.c_str());
     if (!file)
@@ -83,3 +84,4 @@ std::string DecryptToTempFile(const std::string& virtualPath){
 
     return tempPath;
 }
+*/

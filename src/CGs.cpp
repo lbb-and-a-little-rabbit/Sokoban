@@ -1,13 +1,32 @@
 #include "CGs.h"
 
-CGs::CGs(sf::RenderWindow& window) : window(window),font("openresources/uifont.ttf"),text(font) {}
+sf::Font CGs::font;
+std::vector<char> CGs::fontdata;
+std::vector<char> CGs::icondata;
+std::vector<char> CGs::logodata;
+std::vector<char> CGs::shaderdata;
+std::vector<char> CGs::musicdata;
+
+void CGs::LoadTextures(){
+    fontdata=LoadFile("assets/uifont.ttf");
+    if(!font.openFromMemory(fontdata.data(),fontdata.size())){
+        std::cerr << "Failed to load!";
+        exit(-1);
+    }
+
+    icondata=LoadFile("assets/icon.png");
+    logodata=LoadFile("assets/logo.png");
+    musicdata=LoadFile("assets/boot.mp3");
+}
+
+CGs::CGs(sf::RenderWindow& window) : window(window),text(font) {}
 
 void CGs::run(std::atomic<bool>& loaded){
     sf::Texture iconTex, logoTex;
-    if (!iconTex.loadFromFile("openresources/icon.png") ||
-        !logoTex.loadFromFile("openresources/logo.png"))
+    if (!iconTex.loadFromMemory(icondata.data(),icondata.size()) ||
+        !logoTex.loadFromMemory(logodata.data(),logodata.size()))
     {
-        std::cout << "Image load failed\n";
+        std::cerr << "Image load failed\n";
         exit(-1);
     }
 
@@ -22,7 +41,7 @@ void CGs::run(std::atomic<bool>& loaded){
 
     // ===== 加载音效 =====
     sf::Music music;
-    if (!music.openFromFile("openresources/boot.mp3"))
+    if (!music.openFromMemory(musicdata.data(),musicdata.size()))
     {
         std::cout << "Music load failed\n";
         exit(-1);
@@ -41,7 +60,7 @@ void CGs::run(std::atomic<bool>& loaded){
     sf::Clock clock;
 
     while (window.isOpen()){
-        if(loaded) return;
+        if(loaded && clock.getElapsedTime().asSeconds() > 6.f) return;
 
         while (const std::optional event = window.pollEvent()){
             if (event->is<sf::Event::Closed>()) {

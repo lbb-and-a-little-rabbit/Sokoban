@@ -19,6 +19,8 @@ void Menu::LoadTextures(){
         std::cerr << "Failed to load!";
         exit(-1);
     }
+
+    musicData=LoadFile("assets/temple.wav");
 }
 
 // ===== 构造函数 =====
@@ -53,18 +55,13 @@ Menu::Menu(sf::RenderWindow &window)
     exitText.setPosition({300.f, 410.f});
 
     // 菜单音乐
-    auto t1 = std::chrono::high_resolution_clock::now();
-
-    std::string path = "temp/temple.wav";
-
-    auto t2 = std::chrono::high_resolution_clock::now();
-    std::cout << "Decrypt time: "
-    << std::chrono::duration<double>(t2 - t1).count()
-    << "s\n";
-
-    if (currentMusic.openFromFile(path)) {
+    if (currentMusic.openFromMemory(musicData.data(),musicData.size())) {
         currentMusic.setLooping(true);
         currentMusic.play();
+    }
+    else {
+        std::cerr << "Music loaded failed!";
+        exit(-1);
     }
 
     // 存档信息

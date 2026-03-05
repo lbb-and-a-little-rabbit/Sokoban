@@ -12,10 +12,18 @@
 
 class CGs{
     sf::RenderWindow& window;
-    sf::Font font;
+    static sf::Font font;
     sf::Text text;
+
+    static std::vector<char> fontdata;
+    static std::vector<char> icondata;
+    static std::vector<char> logodata;
+    static std::vector<char> shaderdata;
+    static std::vector<char> musicdata;
 
 public:
     CGs(sf::RenderWindow& window);
     void run(std::atomic<bool>& loaded);
+
+    static void LoadTextures(); // 在 PhysFS 挂载后调用一次
 };

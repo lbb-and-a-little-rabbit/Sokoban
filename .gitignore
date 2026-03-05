@@ -1,7 +1,6 @@
 /.vscode
 /build
 /temp
-/openresources
 *.exe
 *.bat
 *.bin

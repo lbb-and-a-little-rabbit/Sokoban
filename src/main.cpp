@@ -19,8 +19,6 @@ int main(int argc, char** argv){
     // 设置写入目录
     PHYSFS_setWriteDir(".");
 
-    std::filesystem::create_directory("temp");
-
     if (!MountEncryptedPak("data.sxk")) {
         std::cout << "Failed to mount encrypted pak\n";
         return -1;
@@ -31,6 +29,8 @@ int main(int argc, char** argv){
     sf::RenderWindow window(sf::VideoMode({800,600}),"SoKoban");
     sf::View view(sf::FloatRect({0.f,0.f},{(float)window.getSize().x,(float)window.getSize().y}));
     window.setView(view);
+
+    CGs::LoadTextures();
 
     // 加载图标
     sf::Image icon;
@@ -94,7 +94,7 @@ int main(int argc, char** argv){
         Menu::LoadTextures();
         Game::LoadTextures();
 
-        DecryptToTempFile("assets/temple.wav");
+        //DecryptToTempFile("assets/temple.wav");
         //INIT_ASSETS
 
         assetsLoaded = true;
