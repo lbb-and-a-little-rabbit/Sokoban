@@ -33,15 +33,18 @@ LevelSelect::LevelSelect(sf::RenderWindow &window,int maxLevel)
     );
     backgroundSprite.setScale(scale);
 
+    float wx=window.getView().getSize().x;
+    float wy=window.getView().getSize().y;
+
     // Menu 文本
     MenuText.setString(L"返回菜单");
     MenuText.setCharacterSize(48);
     MenuText.setFillColor(sf::Color::White);
-    MenuText.setPosition({400.f, 50.f});
+    MenuText.setPosition({wx/2.f, wy/8.f});
 
     // Level 文本
-    float startX = 200.f;
-    float startY = 300.f;
+    float startX = wx/4.f;
+    float startY = wy/2.f;
     float gapX = 100.f;
     float gapY = 40.f;
 

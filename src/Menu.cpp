@@ -36,23 +36,26 @@ Menu::Menu(sf::RenderWindow &window)
     );
     backgroundSprite.setScale(scale);
 
+    float wx=window.getView().getSize().x;
+    float wy=window.getView().getSize().y;
+
     // Start Game 文本
     startText.setString(L"新游戏");
     startText.setCharacterSize(48);
     startText.setFillColor(sf::Color::White);
-    startText.setPosition({300.f, 250.f});
+    startText.setPosition({wx/3.f, wy/2.f});
 
     // Level 文本
     levelText.setString(L"选择关卡");
     levelText.setCharacterSize(48);
     levelText.setFillColor(sf::Color::White);
-    levelText.setPosition({300.f, 330.f});
+    levelText.setPosition({wx/3.f, wy/2.f+80});
 
     // Exit 文本
     exitText.setString(L"退出");
     exitText.setCharacterSize(48);
     exitText.setFillColor(sf::Color::White);
-    exitText.setPosition({300.f, 410.f});
+    exitText.setPosition({wx/3.f, wy/2.f+160});
 
     // 菜单音乐
     if (currentMusic.openFromMemory(musicData.data(),musicData.size())) {
@@ -67,14 +70,22 @@ Menu::Menu(sf::RenderWindow &window)
     // 存档信息
     SaveData save = SaveSystem::load();
     maxLevel = save.maxUnlockedLevel;
+
+    //Shader
+    if (!shader.loadFromFile("openresources/menu.frag", sf::Shader::Type::Fragment)){
+        std::cerr << "Shader load failed\n";
+        exit(-1);
+    }
+    screen.setSize(window.getView().getSize());
 }
 
 // ===== 菜单主循环 =====
 MenuResult Menu::run() {
     MenuResult result = MenuResult::None;
 
+    sf::Clock clock;
     while (window.isOpen() && result == MenuResult::None) {
-        processEvents(result);
+        processEvents(result,clock);
         updateHover();
         render();
     }
@@ -83,7 +94,7 @@ MenuResult Menu::run() {
 }
 
 // ===== 事件处理 =====
-void Menu::processEvents(MenuResult& result) {
+void Menu::processEvents(MenuResult& result,sf::Clock& clock) {
     while (auto event = window.pollEvent()) {
 
         // 关闭窗口
@@ -117,6 +128,14 @@ void Menu::processEvents(MenuResult& result) {
             }
         }
     }
+    float time = clock.getElapsedTime().asSeconds();
+
+    sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
+    sf::Vector2f mouse = window.mapPixelToCoords(mousePixel);
+
+    shader.setUniform("time", time);
+    shader.setUniform("resolution", window.getView().getSize());
+    shader.setUniform("mouse", mouse);
 }
 
 // ===== 悬停高亮 =====
@@ -150,5 +169,6 @@ void Menu::render() {
     window.draw(startText);
     window.draw(levelText);
     window.draw(exitText);
+    window.draw(screen,&shader);
     window.display();
 }

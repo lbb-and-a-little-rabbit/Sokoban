@@ -26,7 +26,7 @@ int main(int argc, char** argv){
 
     srand((unsigned)time(nullptr));
 
-    sf::RenderWindow window(sf::VideoMode({800,600}),"SoKoban");
+    sf::RenderWindow window(sf::VideoMode({1920,1200}),"SoKoban");
     sf::View view(sf::FloatRect({0.f,0.f},{(float)window.getSize().x,(float)window.getSize().y}));
     window.setView(view);
 

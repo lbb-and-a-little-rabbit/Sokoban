@@ -27,7 +27,10 @@ private:
     sf::Text levelText;
     sf::Text exitText;
 
-    void processEvents(MenuResult& result);
+    sf::Shader shader;
+    sf::RectangleShape screen;
+
+    void processEvents(MenuResult& result,sf::Clock& clock);
     void updateHover();
     void render();
 

@@ -65,10 +65,10 @@ Game::Game(sf::RenderWindow &window,unsigned int w,unsigned int h,int cur_level)
     for (auto& line : lines) {
         sf::Text t(uiFont);
         t.setString(line);
-        t.setCharacterSize(18);
+        t.setCharacterSize(36);
         t.setFillColor(sf::Color(200, 200, 200));
         t.setPosition({20.f, y});
-        y += 26.f;
+        y += 52.f;
         helpTexts.push_back(t);
     }
 
