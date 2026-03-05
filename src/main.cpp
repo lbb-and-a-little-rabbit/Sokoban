@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "Menu.h"
+#include "CGs.h"
 #include "LevelSelect.h"
 #include "EncryptedPak.h"
 #include <ctime>
@@ -24,16 +25,6 @@ int main(int argc, char** argv){
         std::cout << "Failed to mount encrypted pak\n";
         return -1;
     }
-
-    //INIT_ASSETS
-    Box::LoadTextures();
-    Player::LoadTextures();
-    Target::LoadTextures();
-    Wall::LoadTextures();
-    LevelSelect::LoadTextures();
-    Menu::LoadTextures();
-    Game::LoadTextures();
-    //INIT_ASSETS
 
     srand((unsigned)time(nullptr));
 
@@ -89,6 +80,27 @@ int main(int argc, char** argv){
 
         return 0;
     }
+
+    CGs cgs(window);
+    std::atomic<bool> assetsLoaded = false;
+    std::thread loader([&](){
+
+        //INIT_ASSETS
+        Box::LoadTextures();
+        Player::LoadTextures();
+        Target::LoadTextures();
+        Wall::LoadTextures();
+        LevelSelect::LoadTextures();
+        Menu::LoadTextures();
+        Game::LoadTextures();
+
+        DecryptToTempFile("assets/temple.wav");
+        //INIT_ASSETS
+
+        assetsLoaded = true;
+    });
+    cgs.run(assetsLoaded);
+    loader.join();
 
 menu_label:
     Menu menu(window);

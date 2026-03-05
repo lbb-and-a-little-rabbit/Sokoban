@@ -53,7 +53,15 @@ Menu::Menu(sf::RenderWindow &window)
     exitText.setPosition({300.f, 410.f});
 
     // 菜单音乐
-    std::string path = DecryptToTempFile("assets/temple.wav");
+    auto t1 = std::chrono::high_resolution_clock::now();
+
+    std::string path = "temp/temple.wav";
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::cout << "Decrypt time: "
+    << std::chrono::duration<double>(t2 - t1).count()
+    << "s\n";
+
     if (currentMusic.openFromFile(path)) {
         currentMusic.setLooping(true);
         currentMusic.play();
