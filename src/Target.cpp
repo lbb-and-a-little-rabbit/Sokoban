@@ -4,7 +4,7 @@ std::vector<sf::Texture> Target::targetTextures;
 
 void Target::LoadTextures(){
     if(targetTextures.empty()){
-        auto data=LoadFile("assets/target.jpg");
+        auto data=LoadFile("assets/target.png");
         sf::Texture tar1;
         if(!tar1.loadFromMemory(data.data(),data.size())){
             std::cerr << "Failed to load!";

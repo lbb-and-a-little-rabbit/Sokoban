@@ -26,7 +26,7 @@ int main(int argc, char** argv){
 
     srand((unsigned)time(nullptr));
 
-    sf::RenderWindow window(sf::VideoMode({1920,1200}),"SoKoban");
+    sf::RenderWindow window(sf::VideoMode({1920,1200}),"Sokoban");
     sf::View view(sf::FloatRect({0.f,0.f},{(float)window.getSize().x,(float)window.getSize().y}));
     window.setView(view);
 
@@ -86,6 +86,7 @@ int main(int argc, char** argv){
     std::thread loader([&](){
 
         //INIT_ASSETS
+        Ground::LoadTextures();
         Box::LoadTextures();
         Player::LoadTextures();
         Target::LoadTextures();
@@ -93,9 +94,6 @@ int main(int argc, char** argv){
         LevelSelect::LoadTextures();
         Menu::LoadTextures();
         Game::LoadTextures();
-
-        //DecryptToTempFile("assets/temple.wav");
-        //INIT_ASSETS
 
         assetsLoaded = true;
     });
@@ -112,7 +110,7 @@ menu_label:
     }
 
     if(result==MenuResult::StartGame){
-        Game game(window,800,600,0);
+        Game game(window,1920,1200,0);
         game.run();
         goto menu_label;
     }
@@ -130,7 +128,7 @@ menu_label:
 
         if(res.first==LevelResult::Selected){
             menu.currentMusic.stop();
-            Game game(window,800,600,res.second);
+            Game game(window,1920,1200,res.second);
             game.run();
             goto menu_label;
         }

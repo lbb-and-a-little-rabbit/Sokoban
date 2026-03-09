@@ -19,7 +19,7 @@ class Wall {
     friend class Player;
 
 public:
-    Wall(float x, float y, float width, float height);
+    Wall(float x, float y, float width, float height,int idx);
     static void LoadTextures(); // 在 PhysFS 挂载后调用一次
     //void update(float dt);
 };

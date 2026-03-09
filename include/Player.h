@@ -6,11 +6,20 @@
 
 #include "physfs_assistant.h"
 
+enum PlayerForward{
+    forward,
+    back,
+    toleft,
+    toright
+};
+
 class Player{
     //Time
     float elapsedTime = 0.f;
     int currentFrame = 0;
     const float switchTime = 1.0f; // 每 1 秒切换一次
+
+    PlayerForward pf=forward;
 
     sf::RectangleShape shape;
     static std::vector<sf::Texture> playerTextures;
@@ -18,6 +27,7 @@ class Player{
     friend class Game;
 
 public:
-    Player(float x, float y, float width, float height); 
+    Player(float x, float y, float width, float height, PlayerForward pf); 
+
     static void LoadTextures(); // 在 PhysFS 挂载后调用一次
 };

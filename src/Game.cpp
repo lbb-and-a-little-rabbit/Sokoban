@@ -23,7 +23,7 @@ Game::Game(sf::RenderWindow &window,unsigned int w,unsigned int h,int cur_level)
     //window.setFramerateLimit(60);
     current_board.current_map=maps_assistant.getMap(current_level); 
     current_board.Init_player_position();
-    Set_based_on_board();
+    Set_based_on_board(Move::Down);
 
     //set music
     if (!music.openFromMemory(bgmData.data(),bgmData.size())) {
@@ -124,7 +124,7 @@ void Game::processEvents(){
                     islevelCompleted=false;
                     current_board.current_map=maps_assistant.getMap(current_level);
                     current_board.Init_player_position();
-                    Set_based_on_board();
+                    Set_based_on_board(Move::Down);
                     break;
                 }
                 case sf::Keyboard::Key::Space:{
@@ -138,7 +138,7 @@ void Game::processEvents(){
                         else{
                             current_board.current_map=maps_assistant.getMap(current_level);
                             current_board.Init_player_position();
-                            Set_based_on_board();
+                            Set_based_on_board(Move::Down);
                         }
                     }
                     break;
@@ -164,7 +164,7 @@ void Game::processEvents(){
                 if(std::find(possibleMoves.begin(), possibleMoves.end(), move) != possibleMoves.end()){
                     current_board = current_board.applyMove(move);
                     walksound.play();
-                    Set_based_on_board();
+                    Set_based_on_board(move);
                 }
             }
 
@@ -219,7 +219,7 @@ void Game::update(){
             current_board = current_board.applyMove(solutionMoves[solutionIndex]);
             walksound.play();
             solutionIndex++;
-            Set_based_on_board();
+            Set_based_on_board(solutionMoves[solutionIndex-1]);
             autoSolveClock.restart();
         }
     }
@@ -236,8 +236,9 @@ void Game::update(){
 }
 
 void Game::render(){
-    window.clear(sf::Color(50, 50, 50));
+    window.clear(sf::Color(128, 128, 128));
 
+    for(auto &g:grounds) window.draw(g.groundSprite);
     for(auto &w:walls) window.draw(w.wallSprite);
     for(auto &t:targets) window.draw(t.targetSprite);
     for(auto &b:boxes) window.draw(b.boxSprite);
@@ -256,9 +257,10 @@ void Game::Clear(){
     boxes.clear();
     walls.clear();
     targets.clear();
+    grounds.clear();
 }
 
-void Game::Set_based_on_board(){
+void Game::Set_based_on_board(Move move){
     Clear();
 
     std::vector<std::string> cur_map=current_board.current_map;
@@ -268,8 +270,11 @@ void Game::Set_based_on_board(){
     float cellSize=std::min(Window_Width/n,Window_Height/m);
     for(int i=0;i<m;i++){
         for(int j=0;j<n;j++){
+
+            grounds.emplace_back(j*cellSize,i*cellSize,cellSize,cellSize);
+
             if(cur_map[i][j]=='#'){
-                walls.emplace_back(j*cellSize,i*cellSize,cellSize,cellSize);
+                walls.emplace_back(j*cellSize,i*cellSize,cellSize,cellSize,(i==0||cur_map[i-1][j]!='#')?0:1);
             }
             else if(cur_map[i][j]=='x'){
                 targets.emplace_back(j*cellSize,i*cellSize,cellSize,cellSize);
@@ -278,7 +283,7 @@ void Game::Set_based_on_board(){
                 boxes.emplace_back(j*cellSize,i*cellSize,cellSize,cellSize,cur_map[i][j]=='B');
             }
             else if(cur_map[i][j]=='P'||cur_map[i][j]=='p'){
-                player=new Player(j*cellSize,i*cellSize,cellSize,cellSize);
+                player=new Player(j*cellSize,i*cellSize,cellSize,cellSize,(PlayerForward)((int)move));
             }
         }
     }

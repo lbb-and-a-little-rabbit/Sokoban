@@ -11,15 +11,23 @@ void Wall::LoadTextures(){
             exit(-1);
         }
         wallTextures.push_back(std::move(wall1));
+
+        data=LoadFile("assets/wall2.png");
+        sf::Texture wall2;
+        if(!wall2.loadFromMemory(data.data(),data.size())){
+            std::cerr << "Failed to load!";
+            exit(-1);
+        }
+        wallTextures.push_back(std::move(wall2));
     }
 }
 
-Wall::Wall(float x, float y, float width, float height) : wallSprite(wallTextures[0]) {
+Wall::Wall(float x, float y, float width, float height,int idx) : wallSprite(wallTextures[idx]) {
     shape.setSize({width, height});
     shape.setPosition({x, y});
 
     wallSprite.setPosition({x, y});
-    sf::Vector2u textureSize = wallTextures[0].getSize();
+    sf::Vector2u textureSize = wallTextures[idx].getSize();
     sf::Vector2f windowSize = shape.getSize();
     sf::Vector2f scale(
         float(windowSize.x) / textureSize.x,

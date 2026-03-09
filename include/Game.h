@@ -14,6 +14,7 @@
 #include "Box.h"
 #include "Target.h"
 #include "Player.h"
+#include "Ground.h"
 
 #include "Trainer.h"
 
@@ -27,6 +28,7 @@ class Game{
     Board current_board;
     bool islevelCompleted=false;
 
+    std::vector<Ground> grounds;
     std::vector<Wall> walls;
     std::vector<Target> targets;
     std::vector<Box> boxes;
@@ -58,7 +60,7 @@ class Game{
     bool backtomenu=false;
 
     void Clear();
-    void Set_based_on_board();
+    void Set_based_on_board(Move move);
 
     void processEvents();
     void update();
