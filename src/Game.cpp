@@ -1,4 +1,6 @@
 #include "Game.h"
+#include <algorithm>
+#include <chrono>
 
 sf::SoundBuffer Game::walkbuffer;
 std::vector<char> Game::fontData;
@@ -19,7 +21,7 @@ void Game::LoadTextures(){
     level_comData=LoadFile("assets/level_win.mp3");
 }
 
-Game::Game(sf::RenderWindow &window,unsigned int w,unsigned int h,int cur_level) : window(window),player(nullptr),Window_Width(w),Window_Height(h),current_level(cur_level),walksound(walkbuffer) {
+Game::Game(sf::RenderWindow &window,unsigned int w,unsigned int h,int cur_level) : Window_Width(w),Window_Height(h),window(window),current_level(cur_level),player(nullptr),walksound(walkbuffer) {
     //window.setFramerateLimit(60);
     current_board.current_map=maps_assistant.getMap(current_level); 
     current_board.Init_player_position();
@@ -44,7 +46,7 @@ Game::Game(sf::RenderWindow &window,unsigned int w,unsigned int h,int cur_level)
 
     // 标题
     sf::Text title(uiFont);
-    title.setString("Control");
+    title.setString(L"按键说明");
     title.setCharacterSize(26);
     title.setFillColor(sf::Color::White);
     title.setPosition({20.f, 20.f});
@@ -54,11 +56,11 @@ Game::Game(sf::RenderWindow &window,unsigned int w,unsigned int h,int cur_level)
     std::vector<std::wstring> lines = {
         L"W / A / S / D\t移动",
         L"R            \t重新开始",
-        L"Space        \t下一关",
+        L"Space        \t通关后进入下一关",
         L"H            \t提示",
         L"P            \tAI解决",
         L"Tab          \t打开/关闭该界面",
-        L"Esc          \t返回菜单"
+        L"Esc          \t返回（游戏中返回菜单）"
     };
 
     float y = 60.f;
@@ -74,186 +76,200 @@ Game::Game(sf::RenderWindow &window,unsigned int w,unsigned int h,int cur_level)
 
 }
 
+
+Game::~Game(){
+    if(aiResult.valid()) aiResult.wait();
+    Clear();
+}
+
 void Game::run(){
     music.play();
-    while(window.isOpen()){
-        processEvents();    
+    window.setKeyRepeatEnabled(false);
+    while(window.isOpen() && !backtomenu){
+        processEvents();
+        if(!window.isOpen() || backtomenu) break;
         update();
         render();
-    
-        if(backtomenu){
-            music.stop();
-            break;
-        }
+        sf::sleep(sf::milliseconds(10));
+    }
+    window.setKeyRepeatEnabled(true);
+    music.stop();
+}
+
+void Game::startAI(bool playback){
+    aiRequestedPlayback = playback;
+    dialogMessage.clear();
+    aiThinking = true;
+    // The worker owns a board snapshot and never touches SFML or game state.
+    try {
+        aiResult = std::async(std::launch::async, [board = current_board](){
+            return Solution(board).solve(2);
+        });
+    } catch (...) {
+        aiThinking = false;
+        dialogMessage = L"AI思考失败，请自己试试";
     }
 }
 
 void Game::processEvents(){
-    while(const std::optional event=window.pollEvent()){
+    while(const auto event = window.pollEvent()){
         if(event->is<sf::Event::Closed>()){
             window.close();
+            return;
         }
-
-        // 按键处理
-        if(event->is<sf::Event::KeyPressed>()){
-            Move move;
-            bool validMove=true;
-            bool gethint=false;
-            bool auto_solve=false;
-
-            switch(event->getIf<sf::Event::KeyPressed>()->code){
-                case sf::Keyboard::Key::W: move = Move::Up; break;
-                case sf::Keyboard::Key::S: move = Move::Down; break;
-                case sf::Keyboard::Key::A: move = Move::Left; break;
-                case sf::Keyboard::Key::D: move = Move::Right; break;
-                case sf::Keyboard::Key::H: {
-                    validMove=false;
-                    gethint=true;
-                    break;
-                }
-                case sf::Keyboard::Key::P:{
-                    isautoSolving=true;
-                    validMove=false;
-                    auto_solve=true;
-                    break;
-                }
-                case sf::Keyboard::Key::R:{
-                    isautoSolving=false;
-                    autoSolving=false;
-                    validMove=false;
-                    islevelCompleted=false;
-                    current_board.current_map=maps_assistant.getMap(current_level);
-                    current_board.Init_player_position();
-                    Set_based_on_board(Move::Down);
-                    break;
-                }
-                case sf::Keyboard::Key::Space:{
-                    validMove=false;
-                    if(islevelCompleted){
-                        islevelCompleted=false;
-                        current_level++;
-                        if(current_level>=maps_assistant.getLevelCount()){
-                            std::cout << "Congratulations!\nYou have completed all levels!\n";
-                        }
-                        else{
-                            current_board.current_map=maps_assistant.getMap(current_level);
-                            current_board.Init_player_position();
-                            Set_based_on_board(Move::Down);
-                        }
+        const auto* key = event->getIf<sf::Event::KeyPressed>();
+        if(!key) continue;
+        // Consume (never queue) every gameplay command while AI owns the board.
+        if(aiThinking || autoSolving) continue;
+        if(!dialogMessage.empty()){
+            if(key->code == sf::Keyboard::Key::Enter || key->code == sf::Keyboard::Key::Escape)
+                dialogMessage.clear();
+            continue;
+        }
+        if(key->code == sf::Keyboard::Key::Tab){
+            showHelp = !showHelp;
+            continue;
+        }
+        if(showHelp){
+            if(key->code == sf::Keyboard::Key::Escape) showHelp = false;
+            continue;
+        }
+        Move move = Move::None;
+        switch(key->code){
+            case sf::Keyboard::Key::W: move = Move::Up; break;
+            case sf::Keyboard::Key::S: move = Move::Down; break;
+            case sf::Keyboard::Key::A: move = Move::Left; break;
+            case sf::Keyboard::Key::D: move = Move::Right; break;
+            case sf::Keyboard::Key::H: startAI(false); break;
+            case sf::Keyboard::Key::P: startAI(true); break;
+            case sf::Keyboard::Key::Escape: backtomenu = true; return;
+            case sf::Keyboard::Key::R:
+                islevelCompleted = false;
+                current_board.current_map = maps_assistant.getMap(current_level);
+                current_board.Init_player_position();
+                Set_based_on_board(Move::Down);
+                break;
+            case sf::Keyboard::Key::Space:
+                if(islevelCompleted){
+                    if(current_level + 1 >= maps_assistant.getLevelCount()){
+                        dialogMessage = L"恭喜！你已完成全部关卡";
+                    } else {
+                        ++current_level;
+                        islevelCompleted = false;
+                        current_board.current_map = maps_assistant.getMap(current_level);
+                        current_board.Init_player_position();
+                        Set_based_on_board(Move::Down);
                     }
-                    break;
                 }
-                case sf::Keyboard::Key::Tab:{
-                    showHelp=!showHelp;
-                    validMove=false;
-                    break;
-                }
-                case sf::Keyboard::Key::Escape:{
-                    backtomenu=true;
-                    break;
-                }
-                default:
-                    validMove=false;
-            }
-
-            if(isautoSolving) validMove=false;
-
-            if(validMove){
-                auto possibleMoves = current_board.generateMoves();
-
-                if(std::find(possibleMoves.begin(), possibleMoves.end(), move) != possibleMoves.end()){
-                    current_board = current_board.applyMove(move);
-                    walksound.play();
-                    Set_based_on_board(move);
-                }
-            }
-
-            if(gethint){
-                Solution sol(current_board);
-                std::cout << "AI is trying.Please wait...\n";
-                Result res=sol.solve(2);
-                if(res.timeout){
-                    std::cout << "AI can't solve this difficult problem(눈_눈)\nPlease try by yourself!\n";
-                }
-                else if(res.solvable){
-                    std::cout << "This problem is now solvable!\nThe optimal solutions is " << res.best_steps << " step(s).\n";
-                }
-                else{
-                    std::cout << "This problem is not solvable right now!\n";
-                }
-            }
-
-            if(auto_solve){
-                Solution sol(current_board);
-                std::cout << "AI is trying.Please wait...\n";
-                Result res = sol.solve(2);
-                if(res.timeout){
-                    isautoSolving=false;
-                    std::cout << "AI can't solve this difficult problem(눈_눈)\nPlease try by yourself!\n";
-                }
-                else if(res.solvable){
-                    solutionMoves = res.path;
-                    solutionIndex = 0;
-                    autoSolving = true;
-                    autoSolveClock.restart();
-                }
-                else{
-                    isautoSolving=false;
-                    std::cout << "This problem is not solvable right now!\n";
-                }
-            }
+                break;
+            default: break;
         }
-
+        if(move != Move::None && !islevelCompleted && current_board.canMove(move)){
+            current_board = current_board.applyMove(move);
+            walksound.play();
+            Set_based_on_board(move);
+        }
     }
 }
 
 void Game::update(){
-    if(autoSolving){
-        if(solutionIndex >= solutionMoves.size()){
-            autoSolving = false;
-            isautoSolving=false;
-            return;
-        }
-
-        if(autoSolveClock.getElapsedTime().asSeconds() >= autoSolveInterval){
-            current_board = current_board.applyMove(solutionMoves[solutionIndex]);
-            walksound.play();
-            solutionIndex++;
-            Set_based_on_board(solutionMoves[solutionIndex-1]);
-            autoSolveClock.restart();
+    if(aiThinking){
+        if(aiResult.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready) return;
+        aiThinking = false;
+        try {
+            const Result res = aiResult.get();
+            if(res.timeout){
+                dialogMessage = L"AI思考失败，请自己试试";
+            } else if(!res.solvable){
+                dialogMessage = L"当前局面已无解";
+            } else if(aiRequestedPlayback){
+                solutionMoves = res.path;
+                solutionIndex = 0;
+                autoSolving = !solutionMoves.empty();
+                autoSolveClock.restart();
+            } else {
+                dialogMessage = L"AI已找到解法，共 " + std::to_wstring(res.best_steps) + L" 步";
+            }
+        } catch (...) {
+            dialogMessage = L"AI思考失败，请自己试试";
         }
     }
-
-    if(current_board.isTerminal()&&!islevelCompleted){
-        islevelCompleted=true;
+    if(autoSolving && autoSolveClock.getElapsedTime().asSeconds() >= autoSolveInterval){
+        const Move move = solutionMoves[solutionIndex++];
+        current_board = current_board.applyMove(move);
+        walksound.play();
+        Set_based_on_board(move);
+        autoSolveClock.restart();
+        if(solutionIndex >= solutionMoves.size()) autoSolving = false;
+    }
+    if(current_board.isTerminal() && !islevelCompleted){
+        islevelCompleted = true;
         level_complete.play();
-
         SaveData data = SaveSystem::load();
-        data.maxUnlockedLevel =
-            std::max(data.maxUnlockedLevel, current_level + 1);
+        data.maxUnlockedLevel = std::max(data.maxUnlockedLevel,
+            std::min(current_level + 1, maps_assistant.getLevelCount() - 1));
         SaveSystem::save(data);
+    }
+}
+
+void Game::drawDialog(const std::wstring& message, bool dismissible){
+    const auto size = window.getView().getSize();
+    const auto center = window.getView().getCenter();
+    sf::RectangleShape shade(size);
+    shade.setPosition(center - size / 2.f);
+    shade.setFillColor(sf::Color(0, 0, 0, 150));
+    window.draw(shade);
+    sf::Text text(uiFont, message, 36);
+    const auto bounds = text.getLocalBounds();
+    text.setOrigin(bounds.position + bounds.size / 2.f);
+    text.setPosition(center - sf::Vector2f(0.f, dismissible ? 22.f : 0.f));
+    sf::RectangleShape panel({std::max(500.f, bounds.size.x + 90.f), dismissible ? 180.f : 130.f});
+    panel.setOrigin(panel.getSize() / 2.f);
+    panel.setPosition(center);
+    panel.setFillColor(sf::Color(35, 42, 55));
+    panel.setOutlineThickness(2.f);
+    panel.setOutlineColor(sf::Color(160, 180, 210));
+    window.draw(panel);
+    window.draw(text);
+    if(dismissible){
+        sf::Text footer(uiFont, L"Enter / Esc 关闭", 24);
+        const auto b = footer.getLocalBounds();
+        footer.setOrigin(b.position + b.size / 2.f);
+        footer.setPosition(center + sf::Vector2f(0.f, 48.f));
+        window.draw(footer);
     }
 }
 
 void Game::render(){
     window.clear(sf::Color(128, 128, 128));
-
-    for(auto &g:grounds) window.draw(g.groundSprite);
-    for(auto &w:walls) window.draw(w.wallSprite);
-    for(auto &t:targets) window.draw(t.targetSprite);
-    for(auto &b:boxes) window.draw(b.boxSprite);
-    if(player) window.draw(player->playerSprite);
-    if (showHelp){
-        for(auto& t:helpTexts) window.draw(t);
+    const auto size = window.getView().getSize();
+    const auto center = window.getView().getCenter();
+    if(showHelp){
+        window.clear(sf::Color(25, 32, 45));
+        for(size_t i = 0; i < helpTexts.size(); ++i){
+            auto& text = helpTexts[i];
+            text.setPosition(center + sf::Vector2f(-300.f, -240.f + i * 60.f));
+            window.draw(text);
+        }
+    } else {
+        for(auto &g:grounds) window.draw(g.groundSprite);
+        for(auto &w:walls) window.draw(w.wallSprite);
+        for(auto &t:targets) window.draw(t.targetSprite);
+        for(auto &b:boxes) window.draw(b.boxSprite);
+        if(player) window.draw(player->playerSprite);
+        sf::Text status(uiFont, autoSolving ? L"AI自走中" :
+            (islevelCompleted ? L"关卡完成 · Space 下一关 · Tab 按键说明" : L"Tab 按键说明"), 24);
+        status.setPosition(center - size / 2.f + sf::Vector2f(20.f, 12.f));
+        window.draw(status);
     }
-
-
+    if(aiThinking) drawDialog(L"AI思考中", false);
+    else if(!dialogMessage.empty()) drawDialog(dialogMessage, true);
     window.display();
 }
 
 void Game::Clear(){
     delete player;
-    player=nullptr;
+    player = nullptr;
     boxes.clear();
     walls.clear();
     targets.clear();
@@ -262,29 +278,27 @@ void Game::Clear(){
 
 void Game::Set_based_on_board(Move move){
     Clear();
-
-    std::vector<std::string> cur_map=current_board.current_map;
-    int m=cur_map.size();
-    int n=cur_map[0].size();
-    
-    float cellSize=std::min(Window_Width/n,Window_Height/m);
-    for(int i=0;i<m;i++){
-        for(int j=0;j<n;j++){
-
-            grounds.emplace_back(j*cellSize,i*cellSize,cellSize,cellSize);
-
-            if(cur_map[i][j]=='#'){
-                walls.emplace_back(j*cellSize,i*cellSize,cellSize,cellSize,(i==0||cur_map[i-1][j]!='#')?0:1);
-            }
-            else if(cur_map[i][j]=='x'){
-                targets.emplace_back(j*cellSize,i*cellSize,cellSize,cellSize);
-            }
-            else if(cur_map[i][j]=='B'||cur_map[i][j]=='b'){
-                boxes.emplace_back(j*cellSize,i*cellSize,cellSize,cellSize,cur_map[i][j]=='B');
-            }
-            else if(cur_map[i][j]=='P'||cur_map[i][j]=='p'){
-                player=new Player(j*cellSize,i*cellSize,cellSize,cellSize,(PlayerForward)((int)move));
-            }
+    const auto& cur_map = current_board.current_map;
+    const int m = cur_map.size();
+    const int n = cur_map[0].size();
+    const auto size = window.getView().getSize();
+    const auto center = window.getView().getCenter();
+    const float cellSize = std::min((size.x - 80.f) / n, (size.y - 100.f) / m);
+    const float offsetX = center.x - n * cellSize / 2.f;
+    const float offsetY = center.y - m * cellSize / 2.f;
+    for(int i = 0; i < m; ++i){
+        for(int j = 0; j < n; ++j){
+            const float x = offsetX + j * cellSize;
+            const float y = offsetY + i * cellSize;
+            grounds.emplace_back(x,y,cellSize,cellSize);
+            if(cur_map[i][j]=='#')
+                walls.emplace_back(x,y,cellSize,cellSize,(i==0||cur_map[i-1][j]!='#')?0:1);
+            else if(cur_map[i][j]=='x')
+                targets.emplace_back(x,y,cellSize,cellSize);
+            else if(cur_map[i][j]=='B'||cur_map[i][j]=='b')
+                boxes.emplace_back(x,y,cellSize,cellSize,cur_map[i][j]=='B');
+            else if(cur_map[i][j]=='P'||cur_map[i][j]=='p')
+                player = new Player(x,y,cellSize,cellSize,(PlayerForward)((int)move));
         }
     }
 }

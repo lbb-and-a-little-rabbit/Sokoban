@@ -1,4 +1,5 @@
 #pragma once
+#include <future>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
@@ -35,7 +36,10 @@ class Game{
     Player* player;
 
     // 自动求解相关
-    bool isautoSolving = false;
+    bool aiThinking = false;
+    bool aiRequestedPlayback = false;
+    std::future<Result> aiResult;
+    std::wstring dialogMessage;
     bool autoSolving = false;
     std::vector<Move> solutionMoves;
     size_t solutionIndex = 0;
@@ -54,7 +58,9 @@ class Game{
     static std::vector<char> fontData;
     sf::Font uiFont;
     std::vector<sf::Text> helpTexts;
-    bool showHelp = true;
+    bool showHelp = false;
+    void startAI(bool playback);
+    void drawDialog(const std::wstring& message, bool dismissible);
 
     //Esc
     bool backtomenu=false;
@@ -68,6 +74,7 @@ class Game{
 
 public:
     Game(sf::RenderWindow &window,unsigned int w=800,unsigned int h=600,int cur_level=0);
+    ~Game();
     static void LoadTextures(); // 在 PhysFS 挂载后调用一次
 
     void run();

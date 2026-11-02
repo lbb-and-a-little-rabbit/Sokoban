@@ -2,6 +2,8 @@
 #include "EncryptedPak.h"
 #include <physfs.h>
 #include <sstream>
+#include <algorithm>
+#include "Map.h"
 
 SaveData SaveSystem::load()
 {
@@ -29,7 +31,15 @@ SaveData SaveSystem::load()
 
     std::string key;
     char eq;
-    iss >> key >> eq >> data.maxUnlockedLevel;
+    if (!(iss >> key >> eq >> data.maxUnlockedLevel) ||
+        key != "maxUnlockedLevel" || eq != '=') return SaveData{};
+    int layoutVersion = 1;
+    if (!(iss >> key >> eq >> layoutVersion)) layoutVersion = 1;
+    // Undo the previous migration that unlocked the inserted maps in bulk.
+    // Legacy saves keep their numeric progress; new maps unlock one at a time.
+    if (layoutVersion == 2 && data.maxUnlockedLevel >= 35)
+        data.maxUnlockedLevel -= 20;
+    data.maxUnlockedLevel = std::clamp(data.maxUnlockedLevel, 0, Map().getLevelCount() - 1);
 
     return data;
 }
@@ -39,7 +49,9 @@ void SaveSystem::save(const SaveData& data)
     PHYSFS_mkdir(SAVE_DIR);
 
     std::ostringstream oss;
-    oss << "maxUnlockedLevel = " << data.maxUnlockedLevel;
+    oss << "maxUnlockedLevel = "
+        << std::clamp(data.maxUnlockedLevel, 0, Map().getLevelCount() - 1)
+        << "\nlayoutVersion = 3";
 
     std::string text = oss.str();
 

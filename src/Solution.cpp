@@ -194,9 +194,9 @@ Result Solution::Astar(){
 
         // 玩家距离加成
         auto [px,py] = b.player_position;
-        int player_dist = INT_MAX;
+        int player_dist = boxPoses.empty() ? 0 : INT_MAX;
         for(auto [by,bx]:boxPoses){
-            player_dist = std::min(player_dist, abs(px-bx)+abs(py-by));
+            player_dist = std::min(player_dist, abs(px-by)+abs(py-bx));
         }
         h += player_dist;
 

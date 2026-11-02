@@ -1,5 +1,7 @@
 #include "LevelSelect.h"
 #include <iostream>
+#include <algorithm>
+#include "Map.h"
 
 // ===== 静态成员定义 =====
 sf::Texture LevelSelect::backgroundTexture;
@@ -24,6 +26,8 @@ void LevelSelect::LoadTextures() {
 LevelSelect::LevelSelect(sf::RenderWindow &window,int maxLevel)
 : window(window),backgroundSprite(backgroundTexture),maxLevel(maxLevel),MenuText(font)
 {
+    this->maxLevel = std::clamp(maxLevel, 0, Map().getLevelCount() - 1);
+    maxLevel = this->maxLevel;
     // 缩放铺满窗口
     sf::Vector2u textureSize = backgroundTexture.getSize();
     sf::Vector2f windowSize = window.getView().getSize();
@@ -43,17 +47,21 @@ LevelSelect::LevelSelect(sf::RenderWindow &window,int maxLevel)
     MenuText.setPosition({wx/2.f, wy/8.f});
 
     // Level 文本
-    float startX = wx/4.f;
-    float startY = wy/2.f;
-    float gapX = 100.f;
-    float gapY = 40.f;
+    const int columns = 6;
+    const int levelCount = Map().getLevelCount();
+    const int rows = (levelCount + columns - 1) / columns;
+    float startX = wx * 0.12f;
+    float startY = wy * 0.30f;
+    float gapX = wx * 0.76f / columns;
+    float gapY = std::min(80.f, wy * 0.60f / rows);
 
-    for(int i = 0; i <= maxLevel; i++){
-        int col = i / 5;  // 第几列
-        int row = i % 5;  // 第几行
+    for(int i = 0; i < levelCount; i++){
+        int col = i % columns;
+        int row = i / columns;
 
         sf::Text text(font);
-        text.setString(L"关卡 " + std::to_wstring(i));
+        text.setCharacterSize(26);
+        text.setString(L"关卡 " + std::to_wstring(i) + (i > maxLevel ? L"（锁定）" : L""));
         text.setPosition({startX + col * gapX, startY + row * gapY});
         levelTexts.push_back(text);
     }
@@ -113,7 +121,12 @@ void LevelSelect::updateHover() {
     sf::Vector2f mouse =
         window.mapPixelToCoords(sf::Mouse::getPosition(window));
 
-    for(sf::Text &t:levelTexts){
+    for(size_t i = 0; i < levelTexts.size(); ++i){
+        auto& t = levelTexts[i];
+        if(static_cast<int>(i) > maxLevel){
+            t.setFillColor(sf::Color(130, 130, 130));
+            continue;
+        }
         if (t.getGlobalBounds().contains(mouse)) {
             t.setFillColor(sf::Color::Red);
         } else {
