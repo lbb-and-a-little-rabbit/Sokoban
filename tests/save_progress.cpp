@@ -32,7 +32,8 @@ int main(int argc, char** argv) {
     check("maxUnlockedLevel = 35\nlayoutVersion = 3", 35);
     check("maxUnlockedLevel = 40\nlayoutVersion = 3", 40);
     check("maxUnlockedLevel = -1", 0);
-    check("maxUnlockedLevel = 999\nlayoutVersion = 3", 40);
+    check("maxUnlockedLevel = 999\nlayoutVersion = 3", 99);
+    check("maxUnlockedLevel = 99\nlayoutVersion = 3", 99);
     check("invalid", 0);
     SaveData data;
     data.maxUnlockedLevel = 15;

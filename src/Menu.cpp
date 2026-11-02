@@ -1,3 +1,4 @@
+#include "DisplayScaling.h"
 #include "Menu.h"
 #include <iostream>
 
@@ -60,7 +61,7 @@ Menu::Menu(sf::RenderWindow &window)
     // 菜单音乐
     if (currentMusic.openFromMemory(musicData.data(),musicData.size())) {
         currentMusic.setLooping(true);
-        currentMusic.play();
+
     }
     else {
         std::cerr << "Music loaded failed!";
@@ -81,6 +82,10 @@ Menu::Menu(sf::RenderWindow &window)
 
 // ===== 菜单主循环 =====
 MenuResult Menu::run() {
+    // Refresh progress after playing, but preserve the music stream across pages.
+    maxLevel = SaveSystem::load().maxUnlockedLevel;
+    if(currentMusic.getStatus() != sf::SoundSource::Status::Playing)
+        currentMusic.play();
     MenuResult result = MenuResult::None;
 
     sf::Clock clock;
@@ -96,6 +101,7 @@ MenuResult Menu::run() {
 // ===== 事件处理 =====
 void Menu::processEvents(MenuResult& result,sf::Clock& clock) {
     while (auto event = window.pollEvent()) {
+            if(DisplayScaling::handleEvent(window, *event)) continue;
 
         // 关闭窗口
         if (event->is<sf::Event::Closed>()) {
@@ -112,7 +118,7 @@ void Menu::processEvents(MenuResult& result,sf::Clock& clock) {
                 // 检查是否点击了 Start Level Exit 文本
                 if (startText.getGlobalBounds().contains(mousePos)) {
                     result = MenuResult::StartGame;
-                    currentMusic.stop();
+
                     return; // 点击后立即返回
                 }
 
@@ -134,8 +140,9 @@ void Menu::processEvents(MenuResult& result,sf::Clock& clock) {
     sf::Vector2f mouse = window.mapPixelToCoords(mousePixel);
 
     shader.setUniform("time", time);
-    shader.setUniform("resolution", window.getView().getSize());
-    shader.setUniform("mouse", mouse);
+    shader.setUniform("resolution", sf::Vector2f(window.getSize()));
+    shader.setUniform("mouse", sf::Vector2f(static_cast<float>(mousePixel.x),
+        static_cast<float>(window.getSize().y) - mousePixel.y));
 }
 
 // ===== 悬停高亮 =====

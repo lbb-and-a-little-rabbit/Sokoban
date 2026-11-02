@@ -18,7 +18,6 @@ class CGs{
     static std::vector<char> fontdata;
     static std::vector<char> icondata;
     static std::vector<char> logodata;
-    static std::vector<char> shaderdata;
     static std::vector<char> musicdata;
 
 public:

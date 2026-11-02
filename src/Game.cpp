@@ -1,3 +1,4 @@
+#include "DisplayScaling.h"
 #include "Game.h"
 #include <algorithm>
 #include <chrono>
@@ -113,6 +114,7 @@ void Game::startAI(bool playback){
 
 void Game::processEvents(){
     while(const auto event = window.pollEvent()){
+            if(DisplayScaling::handleEvent(window, *event)) continue;
         if(event->is<sf::Event::Closed>()){
             window.close();
             return;
@@ -122,37 +124,37 @@ void Game::processEvents(){
         // Consume (never queue) every gameplay command while AI owns the board.
         if(aiThinking || autoSolving) continue;
         if(!dialogMessage.empty()){
-            if(key->code == sf::Keyboard::Key::Enter || key->code == sf::Keyboard::Key::Escape)
+            if(key->scancode == sf::Keyboard::Scancode::Enter || key->scancode == sf::Keyboard::Scancode::Escape)
                 dialogMessage.clear();
             continue;
         }
-        if(key->code == sf::Keyboard::Key::Tab){
+        if(key->scancode == sf::Keyboard::Scancode::Tab){
             showHelp = !showHelp;
             continue;
         }
         if(showHelp){
-            if(key->code == sf::Keyboard::Key::Escape) showHelp = false;
+            if(key->scancode == sf::Keyboard::Scancode::Escape) showHelp = false;
             continue;
         }
         Move move = Move::None;
-        switch(key->code){
-            case sf::Keyboard::Key::W: move = Move::Up; break;
-            case sf::Keyboard::Key::S: move = Move::Down; break;
-            case sf::Keyboard::Key::A: move = Move::Left; break;
-            case sf::Keyboard::Key::D: move = Move::Right; break;
-            case sf::Keyboard::Key::H: startAI(false); break;
-            case sf::Keyboard::Key::P: startAI(true); break;
-            case sf::Keyboard::Key::Escape: backtomenu = true; return;
-            case sf::Keyboard::Key::R:
+        switch(key->scancode){
+            case sf::Keyboard::Scancode::W: move = Move::Up; break;
+            case sf::Keyboard::Scancode::S: move = Move::Down; break;
+            case sf::Keyboard::Scancode::A: move = Move::Left; break;
+            case sf::Keyboard::Scancode::D: move = Move::Right; break;
+            case sf::Keyboard::Scancode::H: startAI(false); break;
+            case sf::Keyboard::Scancode::P: startAI(true); break;
+            case sf::Keyboard::Scancode::Escape: backtomenu = true; return;
+            case sf::Keyboard::Scancode::R:
                 islevelCompleted = false;
                 current_board.current_map = maps_assistant.getMap(current_level);
                 current_board.Init_player_position();
                 Set_based_on_board(Move::Down);
                 break;
-            case sf::Keyboard::Key::Space:
+            case sf::Keyboard::Scancode::Space:
                 if(islevelCompleted){
                     if(current_level + 1 >= maps_assistant.getLevelCount()){
-                        dialogMessage = L"恭喜！你已完成全部关卡";
+                        dialogMessage = L"恭喜通关，你做到了！\n感谢游玩";
                     } else {
                         ++current_level;
                         islevelCompleted = false;
@@ -205,6 +207,8 @@ void Game::update(){
     if(current_board.isTerminal() && !islevelCompleted){
         islevelCompleted = true;
         level_complete.play();
+        if(current_level == maps_assistant.getLevelCount() - 1)
+            dialogMessage = L"恭喜通关，你做到了！\n感谢游玩";
         SaveData data = SaveSystem::load();
         data.maxUnlockedLevel = std::max(data.maxUnlockedLevel,
             std::min(current_level + 1, maps_assistant.getLevelCount() - 1));
@@ -223,7 +227,7 @@ void Game::drawDialog(const std::wstring& message, bool dismissible){
     const auto bounds = text.getLocalBounds();
     text.setOrigin(bounds.position + bounds.size / 2.f);
     text.setPosition(center - sf::Vector2f(0.f, dismissible ? 22.f : 0.f));
-    sf::RectangleShape panel({std::max(500.f, bounds.size.x + 90.f), dismissible ? 180.f : 130.f});
+    sf::RectangleShape panel({std::max(500.f, bounds.size.x + 90.f), std::max(dismissible ? 180.f : 130.f, bounds.size.y + (dismissible ? 110.f : 60.f))});
     panel.setOrigin(panel.getSize() / 2.f);
     panel.setPosition(center);
     panel.setFillColor(sf::Color(35, 42, 55));
@@ -235,7 +239,7 @@ void Game::drawDialog(const std::wstring& message, bool dismissible){
         sf::Text footer(uiFont, L"Enter / Esc 关闭", 24);
         const auto b = footer.getLocalBounds();
         footer.setOrigin(b.position + b.size / 2.f);
-        footer.setPosition(center + sf::Vector2f(0.f, 48.f));
+        footer.setPosition(center + sf::Vector2f(0.f, panel.getSize().y / 2.f - 35.f));
         window.draw(footer);
     }
 }
@@ -258,7 +262,8 @@ void Game::render(){
         for(auto &b:boxes) window.draw(b.boxSprite);
         if(player) window.draw(player->playerSprite);
         sf::Text status(uiFont, autoSolving ? L"AI自走中" :
-            (islevelCompleted ? L"关卡完成 · Space 下一关 · Tab 按键说明" : L"Tab 按键说明"), 24);
+            (islevelCompleted ? (current_level + 1 == maps_assistant.getLevelCount() ?
+                L"全部通关 · Esc 返回菜单 · R 重玩" : L"关卡完成 · Space 下一关 · Tab 按键说明") : L"Tab 按键说明"), 24);
         status.setPosition(center - size / 2.f + sf::Vector2f(20.f, 12.f));
         window.draw(status);
     }

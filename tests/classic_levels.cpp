@@ -51,8 +51,9 @@ int main() {
     assert(!impossible.solvable && !impossible.timeout);
     std::cout << "Unsolvable board correctly distinguished from timeout\n";
     Map maps;
-    assert(maps.getLevelCount() == 41);
-    for (int i = 15; i < 35; ++i) {
+    assert(maps.getLevelCount() == 100);
+    for (int i = 15; i < maps.getLevelCount(); ++i) {
+        if(i >= 35 && i <= 40) continue; // Existing original levels.
         auto rows = maps.getMap(i);
         Board board;
         board.current_map = rows;
@@ -68,6 +69,12 @@ int main() {
             }
         }
         assert(players == 1 && boxes > 0 && boxes == targets);
+        if(i >= 41) {
+            std::cout << "Push search level " << i << std::endl;
+            assert(solvableByPushes(board));
+            std::cout << "Level " << i << ": verified solvable\n";
+            continue;
+        }
         auto result = Solution(rows).solve(2);
         std::cout << "Checking " << i << " timeout=" << result.timeout << " solvable=" << result.solvable << "\n";
         if(result.timeout) {

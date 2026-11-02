@@ -1,3 +1,5 @@
+#include "DisplayScaling.h"
+#include "GameWindowInput.h"
 #include "Game.h"
 #include "Menu.h"
 #include "CGs.h"
@@ -9,6 +11,7 @@
 #include <physfs.h>
 
 int main(int argc, char** argv){
+    DisplayScaling::enableDpiAwareness();
     std::cout << "loading...";
 
     PHYSFS_init(nullptr);
@@ -26,9 +29,10 @@ int main(int argc, char** argv){
 
     srand((unsigned)time(nullptr));
 
-    sf::RenderWindow window(sf::VideoMode({1920,1200}),"Sokoban");
-    sf::View view(sf::FloatRect({0.f,0.f},{(float)window.getSize().x,(float)window.getSize().y}));
-    window.setView(view);
+    // Start fullscreen at the display's current resolution.
+    sf::RenderWindow window(sf::VideoMode::getDesktopMode(), "Sokoban", sf::State::Fullscreen);
+    DisplayScaling::updateView(window);
+    GameWindowInput gameInput(window);
 
     CGs::LoadTextures();
 
@@ -58,6 +62,7 @@ int main(int argc, char** argv){
 
         while(window.isOpen()){
             while(const std::optional event=window.pollEvent()){
+            if(DisplayScaling::handleEvent(window, *event)) continue;
                 if(event->is<sf::Event::Closed>()){
                     window.close();
                 }
@@ -99,39 +104,33 @@ int main(int argc, char** argv){
     });
     cgs.run(assetsLoaded);
     loader.join();
+    if (!window.isOpen()) return 0;
 
-menu_label:
+    // One menu owns one music stream for the entire navigation session.
     Menu menu(window);
-    MenuResult result=menu.run();
-
-    if(result==MenuResult::Exit){
-        window.close();
-        return 0;
-    }
-
-    if(result==MenuResult::StartGame){
-        Game game(window,1920,1200,0);
-        game.run();
-        goto menu_label;
-    }
-
-    if(result==MenuResult::SelectLevel){
-        LevelSelect ls(window,menu.maxLevel);
-        std::pair<LevelResult,int> res=ls.run();
-
-        if(res.first==LevelResult::Close){
+    while(window.isOpen()) {
+        const MenuResult result = menu.run();
+        if(result == MenuResult::Exit) {
             window.close();
-            return 0;
+            break;
         }
-
-        if(res.first==LevelResult::Exit) goto menu_label;
-
-        if(res.first==LevelResult::Selected){
-            menu.currentMusic.stop();
-            Game game(window,1920,1200,res.second);
-            game.run();
-            goto menu_label;
+        int selectedLevel = 0;
+        if(result == MenuResult::SelectLevel) {
+            LevelSelect select(window, menu.maxLevel);
+            const auto [selection, level] = select.run();
+            if(selection == LevelResult::Close) {
+                window.close();
+                break;
+            }
+            if(selection != LevelResult::Selected) continue;
+            selectedLevel = level;
+        } else if(result != MenuResult::StartGame) {
+            continue;
         }
+        // Pause only when entering gameplay; returning resumes the same track.
+        menu.currentMusic.pause();
+        Game game(window,1920,1200,selectedLevel);
+        game.run();
     }
 
     std::filesystem::remove_all("temp");
